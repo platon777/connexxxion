@@ -1,50 +1,128 @@
+// ============================================
+// Backend API Types (matching Xano structure)
+// ============================================
+
+export interface User {
+  id: number;
+  created_at: string;
+  name: string;
+  email?: string;
+  role?: string;
+}
+
 export interface Comment {
-  id: string;
-  confessionId: string;
-  author: string;
-  userId: string;
+  id: number;
+  created_at: string;
+  user: number; // FK to user table
+  confession: number; // FK to confession table
   content: string;
-  timestamp: string;
-  likes: number;
+  like_count: number;
+  // Addon fields
+  _user_object?: User;
+  _is_liked?: boolean;
 }
 
 export interface Confession {
-  id: string;
-  subjectId: string;
+  id: number;
+  created_at: string;
+  user: number; // FK to user table
+  theme: number; // FK to theme table
+  title: string;
   content: string;
-  author: string;
-  userId: string;
-  timestamp: string;
-  peach_likes: number;
-  grape_likes: number;
-  comments: Comment[];
+  view_count: number;
+  like_count: number;
+  comment_count: number;
+  // Addon fields
+  _theme?: Theme;
+  _user_object?: User;
+  _comment_of_confession?: Comment[];
+  real_like_count?: number;
+  _is_liked?: boolean;
 }
 
-export interface Subject {
-  id: string;
-  categoryId: string;
-  userId: string;
-  title: string;
-  confessions: Confession[];
+export interface Theme {
+  id: number;
+  created_at: string;
+  name: string;
+  category: number; // FK to category table
+  description?: string;
+  number_of_confess: number;
+  Active?: boolean;
+  // Addon fields
+  _category?: Category;
+  _confession?: Confession[];
 }
 
 export interface Category {
-  id: string;
+  id: number;
+  created_at: string;
   name: string;
-  userId: string;
-  subjects: Subject[];
+  theme_count?: number;
+  // Addon fields
+  _theme_of_category_2?: Theme[];
 }
+
+export interface ConfessionLike {
+  id: number;
+  created_at: string;
+  confession: number;
+  device_id: string;
+}
+
+export interface CommentLike {
+  id: number;
+  created_at: string;
+  comment: number;
+  device_id: string;
+}
+
+export interface ConfessionView {
+  id: number;
+  created_at: string;
+  confession: number;
+  device_id: string;
+}
+
+// ============================================
+// Authentication Types
+// ============================================
+
+export interface AuthResponse {
+  authToken: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface SignupRequest {
+  name: string;
+  email: string;
+  password: string;
+}
+
+// ============================================
+// Frontend UI Types
+// ============================================
 
 export type View = 'home' | 'categories' | 'subjects' | 'confessions' | 'confessionDetail';
 
 export type ModalState =
   | null
+  | { type: 'login' }
   | { type: 'addCategory' }
   | { type: 'editCategory'; category: Category }
-  | { type: 'addSubject' }
-  | { type: 'editSubject'; subject: Subject }
+  | { type: 'addTheme' }
+  | { type: 'editTheme'; theme: Theme }
   | { type: 'addConfession' }
   | { type: 'editConfession'; confession: Confession }
   | { type: 'addComment' }
   | { type: 'editComment'; comment: Comment }
   | { type: 'confirmDelete'; onConfirm: () => void; message: string };
+
+// ============================================
+// Type Aliases for backward compatibility
+// ============================================
+
+export type Subject = Theme; // Subject is now Theme in backend

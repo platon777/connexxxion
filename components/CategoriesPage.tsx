@@ -12,7 +12,7 @@ interface CategoriesPageProps {
 }
 
 const CategoryCard: React.FC<{ category: Category; onClick: () => void; onEdit: () => void; onDelete: () => void; canModify: boolean; }> = ({ category, onClick, onEdit, onDelete, canModify }) => {
-    const totalSubjects = category.subjects.length;
+    const totalSubjects = category._theme_of_category_2?.length || category.theme_count || 0;
     return (
         <div className="group relative bg-white p-6 rounded-2xl border-2 border-transparent hover:border-yellow-400 shadow-md hover:shadow-yellow-400/20 transition-all duration-300 transform hover:-translate-y-2">
             <div onClick={onClick} className="cursor-pointer">

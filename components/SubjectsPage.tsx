@@ -13,11 +13,11 @@ interface SubjectsPageProps {
 }
 
 const SubjectCard: React.FC<{subject: Subject, onClick: () => void; onEdit: () => void; onDelete: () => void; canModify: boolean;}> = ({subject, onClick, onEdit, onDelete, canModify}) => {
-    const confessionsCount = subject.confessions.length;
+    const confessionsCount = subject._confession?.length || subject.number_of_confess || 0;
     return (
         <div className="group relative bg-white p-6 rounded-2xl border border-gray-200 hover:border-yellow-400 hover:shadow-lg hover:shadow-yellow-400/10 transition-all duration-300 transform hover:-translate-y-1">
             <div onClick={onClick} className="cursor-pointer">
-                <h3 className="text-lg font-semibold text-gray-800 group-hover:text-yellow-600 pr-8">{subject.title}</h3>
+                <h3 className="text-lg font-semibold text-gray-800 group-hover:text-yellow-600 pr-8">{subject.name}</h3>
                 <div className="flex items-center text-sm text-gray-500 mt-3 space-x-2">
                     <span className="text-xl">🤫</span>
                     <span>{confessionsCount} confession{confessionsCount > 1 ? 's' : ''}</span>
@@ -55,17 +55,17 @@ const SubjectsPage: React.FC<SubjectsPageProps> = ({ category, onSelectSubject, 
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {category.subjects.map(subject => (
-          <SubjectCard 
-            key={subject.id} 
-            subject={subject} 
+        {(category._theme_of_category_2 || []).map(subject => (
+          <SubjectCard
+            key={subject.id}
+            subject={subject}
             onClick={() => onSelectSubject(subject.id)}
             onEdit={() => onEditSubject(subject)}
             onDelete={() => onDeleteSubject(subject)}
             canModify={canModify(subject)}
           />
         ))}
-        {category.subjects.length === 0 && (
+        {(!category._theme_of_category_2 || category._theme_of_category_2.length === 0) && (
             <div className="md:col-span-2 lg:col-span-3 text-center py-10 bg-gray-50 rounded-lg">
                 <p className="text-gray-500">Aucun sujet dans cette catégorie pour le moment.</p>
             </div>

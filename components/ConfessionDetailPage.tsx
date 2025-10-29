@@ -14,6 +14,9 @@ interface ConfessionDetailPageProps {
 const COMMENTS_PER_PAGE = 10;
 
 const CommentCard: React.FC<{ comment: Comment; onEdit: () => void; onDelete: () => void; canModify: boolean; }> = ({ comment, onEdit, onDelete, canModify }) => {
+    const authorName = comment._user_object?.name || 'Anonyme';
+    const formattedDate = new Date(comment.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+
     return (
         <div className="relative bg-white p-4 rounded-lg border border-gray-200">
             {/* The ItemMenu is positioned absolutely relative to this container */}
@@ -21,20 +24,20 @@ const CommentCard: React.FC<{ comment: Comment; onEdit: () => void; onDelete: ()
             <div className="flex items-start space-x-3">
                 <div className="flex-shrink-0">
                     <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-500 font-bold">
-                        {comment.author.charAt(0)}
+                        {authorName.charAt(0).toUpperCase()}
                     </div>
                 </div>
                 <div className="flex-1">
                     {/* This div has padding-right to avoid overlapping with the absolutely positioned ItemMenu */}
                     <div className="flex items-center justify-between pr-10">
-                        <p className="font-semibold text-gray-800">{comment.author}</p>
-                        <p className="text-xs text-gray-400 flex-shrink-0">{comment.timestamp}</p>
+                        <p className="font-semibold text-gray-800">{authorName}</p>
+                        <p className="text-xs text-gray-400 flex-shrink-0">{formattedDate}</p>
                     </div>
                     <p className="text-gray-600 mt-1">{comment.content}</p>
                     <div className="flex items-center space-x-2 mt-3">
                         <button className="group flex items-center space-x-1 text-gray-500 transition-transform duration-200 hover:scale-105">
                             <span className="text-lg transition-transform duration-200 group-hover:scale-125">🍑</span>
-                            <span className="text-sm font-medium">{comment.likes}</span>
+                            <span className="text-sm font-medium">{comment.like_count || 0}</span>
                         </button>
                     </div>
                 </div>
@@ -46,7 +49,10 @@ const CommentCard: React.FC<{ comment: Comment; onEdit: () => void; onDelete: ()
 const ConfessionDetailPage: React.FC<ConfessionDetailPageProps> = ({ confession, onBack, onAddComment, onEditComment, onDeleteComment, canModify }) => {
   const [visibleCommentsCount, setVisibleCommentsCount] = useState(COMMENTS_PER_PAGE);
 
-  const commentsToShow = confession.comments.slice(0, visibleCommentsCount);
+  const comments = confession._comment_of_confession || [];
+  const commentsToShow = comments.slice(0, visibleCommentsCount);
+  const authorName = confession._user_object?.name || 'Anonyme';
+  const formattedDate = new Date(confession.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
 
   const handleLoadMore = () => {
     setVisibleCommentsCount(prevCount => prevCount + COMMENTS_PER_PAGE);
@@ -64,22 +70,22 @@ const ConfessionDetailPage: React.FC<ConfessionDetailPageProps> = ({ confession,
         <div className="flex items-center justify-between text-sm text-gray-400 mb-4">
             <div className="flex items-center space-x-2">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                <span>{confession.author}</span>
+                <span>{authorName}</span>
             </div>
             <div className="flex items-center space-x-2">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                <span>{confession.timestamp}</span>
+                <span>{formattedDate}</span>
             </div>
         </div>
         <p className="text-gray-700 text-lg leading-relaxed whitespace-pre-wrap">{confession.content}</p>
         <div className="flex items-center justify-end space-x-6 mt-8 pt-6 border-t border-gray-100">
             <button className="flex items-center space-x-2 text-gray-500 hover:text-yellow-500 transition-colors transform hover:scale-110">
                 <span className="text-2xl">🍑</span>
-                <span className="font-bold">{confession.peach_likes}</span>
+                <span className="font-bold">{confession.like_count || 0}</span>
             </button>
             <button className="flex items-center space-x-2 text-gray-500 hover:text-purple-500 transition-colors transform hover:scale-110">
                 <span className="text-2xl">🍇</span>
-                <span className="font-bold">{confession.grape_likes}</span>
+                <span className="font-bold">0</span>
             </button>
         </div>
       </div>
@@ -87,7 +93,7 @@ const ConfessionDetailPage: React.FC<ConfessionDetailPageProps> = ({ confession,
       {/* Comments Section */}
       <div className="bg-yellow-50/60 p-6 sm:p-8 rounded-2xl border border-yellow-200/80">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Commentaires ({confession.comments.length})</h2>
+          <h2 className="text-2xl font-bold text-gray-800">Commentaires ({comments.length})</h2>
           <button 
               onClick={onAddComment}
               className="flex items-center space-x-2 px-4 py-2 bg-yellow-100 text-yellow-800 font-semibold text-sm rounded-full shadow-sm hover:bg-yellow-200 transition-all duration-300 transform hover:scale-105"
@@ -98,23 +104,23 @@ const ConfessionDetailPage: React.FC<ConfessionDetailPageProps> = ({ confession,
         </div>
         <div className="space-y-4">
           {commentsToShow.map(comment => (
-              <CommentCard 
-                  key={comment.id} 
+              <CommentCard
+                  key={comment.id}
                   comment={comment}
                   onEdit={() => onEditComment(comment)}
                   onDelete={() => onDeleteComment(comment)}
                   canModify={canModify(comment)}
               />
           ))}
-          {confession.comments.length === 0 && (
+          {comments.length === 0 && (
               <div className="text-center py-10 bg-white/50 rounded-lg">
                   <p className="text-gray-500">Aucun commentaire pour le moment.</p>
                   <p className="text-gray-400 text-sm mt-1">Soyez le premier à réagir !</p>
               </div>
           )}
         </div>
-        
-        {confession.comments.length > visibleCommentsCount && (
+
+        {comments.length > visibleCommentsCount && (
           <div className="mt-8 text-center">
               <button
                   onClick={handleLoadMore}

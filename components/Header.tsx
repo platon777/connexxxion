@@ -6,9 +6,10 @@ interface HeaderProps {
   onCategoriesClick: () => void;
   userId: string | null;
   onLogout: () => void;
+  onLogin: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onHomeClick, onCategoriesClick, userId, onLogout }) => {
+const Header: React.FC<HeaderProps> = ({ onHomeClick, onCategoriesClick, userId, onLogout, onLogin }) => {
   return (
     <header className="bg-white/80 backdrop-blur-lg sticky top-0 z-40 shadow-sm border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -23,7 +24,7 @@ const Header: React.FC<HeaderProps> = ({ onHomeClick, onCategoriesClick, userId,
           <div className="flex items-center">
             {userId ? (
               <div className="flex items-center space-x-4">
-                <span className="text-sm font-medium text-gray-600">Connecté: <span className="font-bold">{userId}</span></span>
+                <span className="text-sm font-medium text-gray-600 hidden sm:inline">Connecté: <span className="font-bold">{userId}</span></span>
                 <button
                   onClick={onLogout}
                   className="px-4 py-2 bg-yellow-100 text-yellow-800 text-sm font-semibold rounded-full hover:bg-yellow-200 transition-colors"
@@ -31,7 +32,14 @@ const Header: React.FC<HeaderProps> = ({ onHomeClick, onCategoriesClick, userId,
                   Déconnexion
                 </button>
               </div>
-            ) : null}
+            ) : (
+              <button
+                onClick={onLogin}
+                className="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-gray-900 text-sm font-bold rounded-full shadow-md transition-all duration-300 transform hover:scale-105"
+              >
+                Se connecter
+              </button>
+            )}
           </div>
         </div>
       </div>

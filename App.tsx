@@ -1,6 +1,12 @@
-import React, { useState } from 'react';
-import { MOCK_DATA } from './constants';
-import type { Category, Subject, Confession, Comment, View, ModalState } from './types';
+import React, { useState, useEffect } from 'react';
+import type { Category, Theme, Confession, Comment, View, ModalState, User } from './types';
+import {
+  categoryService,
+  themeService,
+  confessionService,
+  commentService,
+  authService,
+} from './api';
 
 import Header from './components/Header';
 import HomePage from './components/HomePage';
@@ -17,51 +23,88 @@ import AddCommentForm from './components/AddCommentForm';
 import ConfirmDeleteModal from './components/ConfirmDeleteModal';
 
 const App: React.FC = () => {
-  const [userId, setUserId] = useState<string | null>(null);
-  const [data, setData] = useState<Category[]>(MOCK_DATA);
+  const [user, setUser] = useState<User | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
   const [view, setView] = useState<View>('home');
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
-  const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
-  const [selectedConfessionId, setSelectedConfessionId] = useState<string | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [selectedThemeId, setSelectedThemeId] = useState<number | null>(null);
+  const [selectedConfessionId, setSelectedConfessionId] = useState<number | null>(null);
   const [modalState, setModalState] = useState<ModalState>(null);
 
+  // --- Load initial data ---
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
+  const loadCategories = async () => {
+    setLoading(true);
+    try {
+      const data = await categoryService.getCategories();
+      setCategories(data);
+    } catch (error) {
+      console.error('Failed to load categories:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // --- Data Access Helpers ---
-  const findCategory = (id: string | null) => data.find(c => c.id === id);
-  const findSubject = (cat: Category | undefined, id: string | null) => cat?.subjects.find(s => s.id === id);
-  const findConfession = (sub: Subject | undefined, id: string | null) => sub?.confessions.find(c => c.id === id);
+  const findCategory = (id: number | null): Category | undefined => {
+    return id !== null ? categories.find((c: Category) => c.id === id) : undefined;
+  };
+
+  const findTheme = (cat: Category | undefined, id: number | null): Theme | undefined => {
+    if (!cat || id === null) return undefined;
+    return cat._theme_of_category_2?.find((t: Theme) => t.id === id);
+  };
+
+  const findConfession = (theme: Theme | undefined, id: number | null): Confession | undefined => {
+    if (!theme || id === null) return undefined;
+    return theme._confession?.find((c: Confession) => c.id === id);
+  };
 
   const selectedCategory = findCategory(selectedCategoryId);
-  const selectedSubject = findSubject(selectedCategory, selectedSubjectId);
-  const selectedConfession = findConfession(selectedSubject, selectedConfessionId);
+  const selectedTheme = findTheme(selectedCategory, selectedThemeId);
+  const selectedConfession = findConfession(selectedTheme, selectedConfessionId);
 
   // --- Auth ---
-  const handleLogin = (id: string) => {
-    setUserId(id);
+  const handleLogin = (loggedInUser: User) => {
+    setUser(loggedInUser);
     setView('home');
+    loadCategories(); // Reload data after login
   };
+
   const handleLogout = () => {
-    setUserId(null);
+    authService.logout();
+    setUser(null);
     setView('home');
     setSelectedCategoryId(null);
-    setSelectedSubjectId(null);
+    setSelectedThemeId(null);
     setSelectedConfessionId(null);
   };
-  const canModify = (item: { userId: string }) => {
-    if (!userId) return false;
-    return userId === 'admin' || userId === item.userId;
+
+  const canModify = (item: { user: number }) => {
+    if (!user) return false;
+    return user.role === 'admin' || user.id === item.user;
   };
 
   // --- Navigation ---
-  const navigate = (newView: View, catId: string | null = null, subId: string | null = null, confId: string | null = null) => {
+  const navigate = (
+    newView: View,
+    catId: number | null = null,
+    themeId: number | null = null,
+    confId: number | null = null
+  ) => {
     setView(newView);
     setSelectedCategoryId(catId);
-    setSelectedSubjectId(subId);
+    setSelectedThemeId(themeId);
     setSelectedConfessionId(confId);
   };
 
   const handleBack = () => {
     if (view === 'confessionDetail') {
-      navigate('confessions', selectedCategoryId, selectedSubjectId);
+      navigate('confessions', selectedCategoryId, selectedThemeId);
     } else if (view === 'confessions') {
       navigate('subjects', selectedCategoryId);
     } else if (view === 'subjects') {
@@ -73,226 +116,339 @@ const App: React.FC = () => {
   const closeModal = () => setModalState(null);
 
   // Category
-  const handleAddCategory = (name: string) => {
-    if(!userId) return;
-    const newCategory: Category = { id: `cat${Date.now()}`, name, userId: userId, subjects: [] };
-    setData([...data, newCategory]);
-    closeModal();
-  };
-  const handleEditCategory = (name: string) => {
-    if (modalState?.type === 'editCategory') {
-      setData(data.map(c => c.id === modalState.category.id ? { ...c, name } : c));
+  const handleAddCategory = async (name: string) => {
+    if (!user) return;
+    try {
+      await categoryService.createCategory({ name });
+      await loadCategories();
+      closeModal();
+    } catch (error) {
+      console.error('Failed to create category:', error);
+      alert('Erreur lors de la création de la catégorie');
     }
-    closeModal();
-  };
-  const handleDeleteCategory = (category: Category) => {
-    setData(data.filter(c => c.id !== category.id));
-    closeModal();
   };
 
-  // Subject
-  const handleAddSubject = (title: string) => {
-    if(!userId || !selectedCategoryId) return;
-    const newSubject: Subject = { id: `sub${Date.now()}`, categoryId: selectedCategoryId, title, userId: userId, confessions: [] };
-    setData(data.map(c => c.id === selectedCategoryId ? { ...c, subjects: [...c.subjects, newSubject] } : c));
-    closeModal();
-  };
-  const handleEditSubject = (title: string) => {
-    if (modalState?.type === 'editSubject' && selectedCategory) {
-      const updatedSubjects = selectedCategory.subjects.map(s => s.id === modalState.subject.id ? { ...s, title } : s);
-      setData(data.map(c => c.id === selectedCategoryId ? { ...c, subjects: updatedSubjects } : c));
+  const handleEditCategory = async (name: string) => {
+    if (modalState?.type === 'editCategory') {
+      try {
+        await categoryService.updateCategory(modalState.category.id, { name });
+        await loadCategories();
+        closeModal();
+      } catch (error) {
+        console.error('Failed to update category:', error);
+        alert('Erreur lors de la modification de la catégorie');
+      }
     }
-    closeModal();
   };
-  const handleDeleteSubject = (subject: Subject) => {
-    if (selectedCategory) {
-      const updatedSubjects = selectedCategory.subjects.filter(s => s.id !== subject.id);
-      setData(data.map(c => c.id === selectedCategoryId ? { ...c, subjects: updatedSubjects } : c));
+
+  const handleDeleteCategory = async (category: Category) => {
+    try {
+      await categoryService.deleteCategory(category.id);
+      await loadCategories();
+      closeModal();
+    } catch (error) {
+      console.error('Failed to delete category:', error);
+      alert('Erreur lors de la suppression de la catégorie');
     }
-    closeModal();
   };
-  
+
+  // Theme (Subject)
+  const handleAddTheme = async (title: string) => {
+    if (!user || !selectedCategoryId) return;
+    try {
+      await themeService.createTheme({
+        name: title,
+        category: selectedCategoryId,
+      });
+      await loadCategories();
+      closeModal();
+    } catch (error) {
+      console.error('Failed to create theme:', error);
+      alert('Erreur lors de la création du sujet');
+    }
+  };
+
+  const handleEditTheme = async (title: string) => {
+    if (modalState?.type === 'editTheme') {
+      try {
+        await themeService.updateTheme(modalState.theme.id, { name: title });
+        await loadCategories();
+        closeModal();
+      } catch (error) {
+        console.error('Failed to update theme:', error);
+        alert('Erreur lors de la modification du sujet');
+      }
+    }
+  };
+
+  const handleDeleteTheme = async (theme: Theme) => {
+    try {
+      await themeService.deleteTheme(theme.id);
+      await loadCategories();
+      closeModal();
+    } catch (error) {
+      console.error('Failed to delete theme:', error);
+      alert('Erreur lors de la suppression du sujet');
+    }
+  };
+
   // Confession
-  const handleAddConfession = (content: string) => {
-      if(!userId || !selectedSubjectId) return;
-      const newConfession: Confession = {
-          id: `conf${Date.now()}`,
-          subjectId: selectedSubjectId,
-          author: 'Anonyme',
-          userId: userId,
-          timestamp: 'à l\'instant',
+  const handleAddConfession = async (content: string) => {
+    if (!user || !selectedThemeId) return;
+    try {
+      await confessionService.createConfession({
+        user: user.id,
+        theme: selectedThemeId,
+        title: content.substring(0, 50), // Use first 50 chars as title
+        content,
+      });
+      await loadCategories();
+      closeModal();
+    } catch (error) {
+      console.error('Failed to create confession:', error);
+      alert('Erreur lors de la création de la confession');
+    }
+  };
+
+  const handleEditConfession = async (content: string) => {
+    if (modalState?.type === 'editConfession') {
+      try {
+        await confessionService.updateConfession(modalState.confession.id, {
           content,
-          peach_likes: 0,
-          grape_likes: 0,
-          comments: [],
-      };
-      if (selectedCategory && selectedSubject) {
-          const updatedConfessions = [...selectedSubject.confessions, newConfession];
-          const updatedSubjects = selectedCategory.subjects.map(s => s.id === selectedSubjectId ? {...s, confessions: updatedConfessions} : s);
-          setData(data.map(c => c.id === selectedCategoryId ? {...c, subjects: updatedSubjects} : c));
+          title: content.substring(0, 50),
+        });
+        await loadCategories();
+        closeModal();
+      } catch (error) {
+        console.error('Failed to update confession:', error);
+        alert('Erreur lors de la modification de la confession');
       }
-      closeModal();
+    }
   };
-  const handleEditConfession = (content: string) => {
-      if (modalState?.type === 'editConfession' && selectedCategory && selectedSubject) {
-          const updatedConfessions = selectedSubject.confessions.map(conf => conf.id === modalState.confession.id ? {...conf, content} : conf);
-          const updatedSubjects = selectedCategory.subjects.map(s => s.id === selectedSubjectId ? {...s, confessions: updatedConfessions} : s);
-          setData(data.map(c => c.id === selectedCategoryId ? {...c, subjects: updatedSubjects} : c));
-      }
+
+  const handleDeleteConfession = async (confession: Confession) => {
+    try {
+      await confessionService.deleteConfession(confession.id);
+      await loadCategories();
       closeModal();
-  };
-  const handleDeleteConfession = (confession: Confession) => {
-      if (selectedCategory && selectedSubject) {
-          const updatedConfessions = selectedSubject.confessions.filter(c => c.id !== confession.id);
-          const updatedSubjects = selectedCategory.subjects.map(s => s.id === selectedSubjectId ? {...s, confessions: updatedConfessions} : s);
-          setData(data.map(c => c.id === selectedCategoryId ? {...c, subjects: updatedSubjects} : c));
-      }
-      closeModal();
+    } catch (error) {
+      console.error('Failed to delete confession:', error);
+      alert('Erreur lors de la suppression de la confession');
+    }
   };
 
   // Comment
-  const handleAddComment = (content: string) => {
-      if(!userId || !selectedConfessionId) return;
-      const newComment: Comment = {
-          id: `com${Date.now()}`,
-          confessionId: selectedConfessionId,
-          author: userId,
-          userId: userId,
-          timestamp: 'à l\'instant',
-          content,
-          likes: 0
-      };
-      if (selectedCategory && selectedSubject && selectedConfession) {
-          const updatedComments = [...selectedConfession.comments, newComment];
-          const updatedConfessions = selectedSubject.confessions.map(c => c.id === selectedConfessionId ? {...c, comments: updatedComments} : c);
-          const updatedSubjects = selectedCategory.subjects.map(s => s.id === selectedSubjectId ? {...s, confessions: updatedConfessions} : s);
-          setData(data.map(c => c.id === selectedCategoryId ? {...c, subjects: updatedSubjects} : c));
-      }
+  const handleAddComment = async (content: string) => {
+    if (!user || !selectedConfessionId) return;
+    try {
+      await commentService.createComment({
+        user: user.id,
+        confession: selectedConfessionId,
+        content,
+      });
+      await loadCategories();
       closeModal();
+    } catch (error) {
+      console.error('Failed to create comment:', error);
+      alert('Erreur lors de la création du commentaire');
+    }
   };
-  const handleEditComment = (content: string) => {
-      if (modalState?.type === 'editComment' && selectedCategory && selectedSubject && selectedConfession) {
-          const updatedComments = selectedConfession.comments.map(com => com.id === modalState.comment.id ? {...com, content} : com);
-          const updatedConfessions = selectedSubject.confessions.map(c => c.id === selectedConfessionId ? {...c, comments: updatedComments} : c);
-          const updatedSubjects = selectedCategory.subjects.map(s => s.id === selectedSubjectId ? {...s, confessions: updatedConfessions} : s);
-          setData(data.map(c => c.id === selectedCategoryId ? {...c, subjects: updatedSubjects} : c));
+
+  const handleEditComment = async (content: string) => {
+    if (modalState?.type === 'editComment') {
+      try {
+        await commentService.updateComment(modalState.comment.id, { content });
+        await loadCategories();
+        closeModal();
+      } catch (error) {
+        console.error('Failed to update comment:', error);
+        alert('Erreur lors de la modification du commentaire');
       }
-      closeModal();
+    }
   };
-  const handleDeleteComment = (comment: Comment) => {
-      if (selectedCategory && selectedSubject && selectedConfession) {
-          const updatedComments = selectedConfession.comments.filter(c => c.id !== comment.id);
-          const updatedConfessions = selectedSubject.confessions.map(c => c.id === selectedConfessionId ? {...c, comments: updatedComments} : c);
-          const updatedSubjects = selectedCategory.subjects.map(s => s.id === selectedSubjectId ? {...s, confessions: updatedConfessions} : s);
-          setData(data.map(c => c.id === selectedCategoryId ? {...c, subjects: updatedSubjects} : c));
-      }
+
+  const handleDeleteComment = async (comment: Comment) => {
+    try {
+      await commentService.deleteComment(comment.id);
+      await loadCategories();
       closeModal();
+    } catch (error) {
+      console.error('Failed to delete comment:', error);
+      alert('Erreur lors de la suppression du commentaire');
+    }
   };
 
   const handleMobileAdd = () => {
-    switch(view) {
-        case 'categories': setModalState({ type: 'addCategory' }); break;
-        case 'subjects': setModalState({ type: 'addSubject' }); break;
-        case 'confessions': setModalState({ type: 'addConfession' }); break;
-        case 'confessionDetail': setModalState({ type: 'addComment' }); break;
-        default: break;
+    if (!user) {
+      setModalState({ type: 'login' });
+      return;
+    }
+
+    switch (view) {
+      case 'categories':
+        setModalState({ type: 'addCategory' });
+        break;
+      case 'subjects':
+        setModalState({ type: 'addTheme' });
+        break;
+      case 'confessions':
+        setModalState({ type: 'addConfession' });
+        break;
+      case 'confessionDetail':
+        setModalState({ type: 'addComment' });
+        break;
+      default:
+        break;
     }
   };
 
   // --- Render Logic ---
   const renderContent = () => {
-    switch(view) {
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400"></div>
+            <p className="mt-4 text-gray-600">Chargement...</p>
+          </div>
+        </div>
+      );
+    }
+
+    switch (view) {
       case 'home':
         return <HomePage onStart={() => navigate('categories')} />;
       case 'categories':
-        return <CategoriesPage
-          categories={data}
-          onSelectCategory={(id) => navigate('subjects', id)}
-          onAddCategory={() => setModalState({ type: 'addCategory' })}
-          onEditCategory={(c) => setModalState({ type: 'editCategory', category: c })}
-          onDeleteCategory={(c) => setModalState({ type: 'confirmDelete', message: 'Supprimer cette catégorie et tous ses sujets ?', onConfirm: () => handleDeleteCategory(c) })}
-          canModify={canModify}
-        />;
+        return (
+          <CategoriesPage
+            categories={categories}
+            onSelectCategory={(id: number) => navigate('subjects', id)}
+            onAddCategory={() => user ? setModalState({ type: 'addCategory' }) : setModalState({ type: 'login' })}
+            onEditCategory={(c: Category) => setModalState({ type: 'editCategory', category: c })}
+            onDeleteCategory={(c: Category) =>
+              setModalState({
+                type: 'confirmDelete',
+                message: 'Supprimer cette catégorie et tous ses sujets ?',
+                onConfirm: () => handleDeleteCategory(c),
+              })
+            }
+            canModify={canModify}
+          />
+        );
       case 'subjects':
         if (!selectedCategory) return <div>Catégorie non trouvée</div>;
-        return <SubjectsPage
-          category={selectedCategory}
-          onSelectSubject={(id) => navigate('confessions', selectedCategoryId, id)}
-          onBack={handleBack}
-          onAddSubject={() => setModalState({ type: 'addSubject' })}
-          onEditSubject={(s) => setModalState({ type: 'editSubject', subject: s })}
-          onDeleteSubject={(s) => setModalState({ type: 'confirmDelete', message: 'Supprimer ce sujet et toutes ses confessions ?', onConfirm: () => handleDeleteSubject(s) })}
-          canModify={canModify}
-        />;
+        return (
+          <SubjectsPage
+            category={selectedCategory}
+            onSelectSubject={(id: number) => navigate('confessions', selectedCategoryId, id)}
+            onBack={handleBack}
+            onAddSubject={() => user ? setModalState({ type: 'addTheme' }) : setModalState({ type: 'login' })}
+            onEditSubject={(s: Theme) => setModalState({ type: 'editTheme', theme: s })}
+            onDeleteSubject={(s: Theme) =>
+              setModalState({
+                type: 'confirmDelete',
+                message: 'Supprimer ce sujet et toutes ses confessions ?',
+                onConfirm: () => handleDeleteTheme(s),
+              })
+            }
+            canModify={canModify}
+          />
+        );
       case 'confessions':
-        if (!selectedSubject) return <div>Sujet non trouvé</div>;
-        return <ConfessionsPage
-          subject={selectedSubject}
-          onSelectConfession={(id) => navigate('confessionDetail', selectedCategoryId, selectedSubjectId, id)}
-          onBack={handleBack}
-          onAddConfession={() => setModalState({ type: 'addConfession' })}
-          onEditConfession={(c) => setModalState({ type: 'editConfession', confession: c })}
-          onDeleteConfession={(c) => setModalState({ type: 'confirmDelete', message: 'Supprimer cette confession ?', onConfirm: () => handleDeleteConfession(c) })}
-          canModify={canModify}
-        />;
+        if (!selectedTheme) return <div>Sujet non trouvé</div>;
+        return (
+          <ConfessionsPage
+            subject={selectedTheme}
+            onSelectConfession={(id: number) => navigate('confessionDetail', selectedCategoryId, selectedThemeId, id)}
+            onBack={handleBack}
+            onAddConfession={() => user ? setModalState({ type: 'addConfession' }) : setModalState({ type: 'login' })}
+            onEditConfession={(c: Confession) => setModalState({ type: 'editConfession', confession: c })}
+            onDeleteConfession={(c: Confession) =>
+              setModalState({
+                type: 'confirmDelete',
+                message: 'Supprimer cette confession ?',
+                onConfirm: () => handleDeleteConfession(c),
+              })
+            }
+            canModify={canModify}
+          />
+        );
       case 'confessionDetail':
         if (!selectedConfession) return <div>Confession non trouvée</div>;
-        return <ConfessionDetailPage
-          confession={selectedConfession}
-          onBack={handleBack}
-          onAddComment={() => setModalState({ type: 'addComment' })}
-          onEditComment={(c) => setModalState({ type: 'editComment', comment: c })}
-          onDeleteComment={(c) => setModalState({ type: 'confirmDelete', message: 'Supprimer ce commentaire ?', onConfirm: () => handleDeleteComment(c) })}
-          canModify={canModify}
-        />;
+        return (
+          <ConfessionDetailPage
+            confession={selectedConfession}
+            onBack={handleBack}
+            onAddComment={() => user ? setModalState({ type: 'addComment' }) : setModalState({ type: 'login' })}
+            onEditComment={(c: Comment) => setModalState({ type: 'editComment', comment: c })}
+            onDeleteComment={(c: Comment) =>
+              setModalState({
+                type: 'confirmDelete',
+                message: 'Supprimer ce commentaire ?',
+                onConfirm: () => handleDeleteComment(c),
+              })
+            }
+            canModify={canModify}
+          />
+        );
       default:
         return <HomePage onStart={() => navigate('categories')} />;
     }
+  };
+
+  const handleLoginSuccess = (loggedInUser: User) => {
+    handleLogin(loggedInUser);
+    closeModal();
   };
 
   const renderModal = () => {
     if (!modalState) return null;
 
     switch (modalState.type) {
+      case 'login':
+        return <LoginPage onLogin={handleLoginSuccess} />;
       case 'addCategory':
         return <AddCategoryForm onClose={closeModal} onSubmit={handleAddCategory} />;
       case 'editCategory':
-        return <AddCategoryForm onClose={closeModal} onSubmit={handleEditCategory} itemToEdit={modalState.category} />;
-      case 'addSubject':
-        return <AddSubjectForm onClose={closeModal} onSubmit={handleAddSubject} />;
-      case 'editSubject':
-        return <AddSubjectForm onClose={closeModal} onSubmit={handleEditSubject} itemToEdit={modalState.subject} />;
+        return (
+          <AddCategoryForm onClose={closeModal} onSubmit={handleEditCategory} itemToEdit={modalState.category} />
+        );
+      case 'addTheme':
+        return <AddSubjectForm onClose={closeModal} onSubmit={handleAddTheme} />;
+      case 'editTheme':
+        return <AddSubjectForm onClose={closeModal} onSubmit={handleEditTheme} itemToEdit={modalState.theme} />;
       case 'addConfession':
-          return <AddConfessionForm onClose={closeModal} onSubmit={handleAddConfession} />;
+        return <AddConfessionForm onClose={closeModal} onSubmit={handleAddConfession} />;
       case 'editConfession':
-          return <AddConfessionForm onClose={closeModal} onSubmit={handleEditConfession} itemToEdit={modalState.confession} />;
+        return (
+          <AddConfessionForm
+            onClose={closeModal}
+            onSubmit={handleEditConfession}
+            itemToEdit={modalState.confession}
+          />
+        );
       case 'addComment':
-          return <AddCommentForm onClose={closeModal} onSubmit={handleAddComment} />;
+        return <AddCommentForm onClose={closeModal} onSubmit={handleAddComment} />;
       case 'editComment':
-          return <AddCommentForm onClose={closeModal} onSubmit={handleEditComment} itemToEdit={modalState.comment} />;
+        return <AddCommentForm onClose={closeModal} onSubmit={handleEditComment} itemToEdit={modalState.comment} />;
       case 'confirmDelete':
         return <ConfirmDeleteModal message={modalState.message} onConfirm={modalState.onConfirm} onCancel={closeModal} />;
       default:
         return null;
     }
   };
-  
-  if (!userId) {
-    return <LoginPage onLogin={handleLogin} />;
-  }
 
   return (
     <div className="bg-stone-50 min-h-screen font-sans">
-      <Header 
-        onHomeClick={() => navigate('home')} 
+      <Header
+        onHomeClick={() => navigate('home')}
         onCategoriesClick={() => navigate('categories')}
-        userId={userId}
+        userId={user?.name || null}
         onLogout={handleLogout}
+        onLogin={() => setModalState({ type: 'login' })}
       />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-        {renderContent()}
-      </main>
-      <MobileNav 
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">{renderContent()}</main>
+      <MobileNav
         currentView={view}
         onHomeClick={() => navigate('home')}
         onCategoriesClick={() => navigate('categories')}
