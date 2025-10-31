@@ -31,6 +31,7 @@ const App: React.FC = () => {
   const [selectedThemeId, setSelectedThemeId] = useState<number | null>(null);
   const [selectedConfessionId, setSelectedConfessionId] = useState<number | null>(null);
   const [modalState, setModalState] = useState<ModalState>(null);
+  const [confessionComments, setConfessionComments] = useState<Record<number, Comment[]>>({});
 
   // --- Load initial data ---
   useEffect(() => {
@@ -46,6 +47,18 @@ const App: React.FC = () => {
       console.error('Failed to load categories:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadConfessionComments = async (confessionId: number) => {
+    try {
+      const data = await commentService.getCommentsByConfession(confessionId);
+      setConfessionComments((prev) => ({
+        ...prev,
+        [confessionId]: data,
+      }));
+    } catch (error) {
+      console.error(`Failed to load comments for confession ${confessionId}:`, error);
     }
   };
 
@@ -66,7 +79,14 @@ const App: React.FC = () => {
 
   const selectedCategory = findCategory(selectedCategoryId);
   const selectedTheme = findTheme(selectedCategory, selectedThemeId);
-  const selectedConfession = findConfession(selectedTheme, selectedConfessionId);
+  const baseConfession = findConfession(selectedTheme, selectedConfessionId);
+  const selectedConfession = baseConfession
+    ? {
+        ...baseConfession,
+        _comment_of_confession:
+          confessionComments[baseConfession.id] ?? baseConfession._comment_of_confession ?? [],
+      }
+    : undefined;
 
   // --- Auth ---
   const handleLogin = (loggedInUser: User) => {
@@ -84,9 +104,16 @@ const App: React.FC = () => {
     setSelectedConfessionId(null);
   };
 
-  const canModify = (item: { user: number }) => {
+  const openLoginView = () => {
+    setModalState(null);
+    setView('login');
+  };
+
+  const canModify = (item?: { user?: number | null }) => {
     if (!user) return false;
-    return user.role === 'admin' || user.id === item.user;
+    if (user.role === 'admin') return true;
+    if (!item || item.user == null) return true;
+    return user.id === item.user;
   };
 
   // --- Navigation ---
@@ -100,6 +127,10 @@ const App: React.FC = () => {
     setSelectedCategoryId(catId);
     setSelectedThemeId(themeId);
     setSelectedConfessionId(confId);
+
+    if (newView === 'confessionDetail' && confId !== null) {
+      loadConfessionComments(confId);
+    }
   };
 
   const handleBack = () => {
@@ -247,6 +278,7 @@ const App: React.FC = () => {
         content,
       });
       await loadCategories();
+      await loadConfessionComments(selectedConfessionId);
       closeModal();
     } catch (error) {
       console.error('Failed to create comment:', error);
@@ -259,6 +291,9 @@ const App: React.FC = () => {
       try {
         await commentService.updateComment(modalState.comment.id, { content });
         await loadCategories();
+        if (selectedConfessionId) {
+          await loadConfessionComments(selectedConfessionId);
+        }
         closeModal();
       } catch (error) {
         console.error('Failed to update comment:', error);
@@ -271,6 +306,9 @@ const App: React.FC = () => {
     try {
       await commentService.deleteComment(comment.id);
       await loadCategories();
+      if (selectedConfessionId) {
+        await loadConfessionComments(selectedConfessionId);
+      }
       closeModal();
     } catch (error) {
       console.error('Failed to delete comment:', error);
@@ -280,7 +318,7 @@ const App: React.FC = () => {
 
   const handleMobileAdd = () => {
     if (!user) {
-      setModalState({ type: 'login' });
+      openLoginView();
       return;
     }
 
@@ -304,7 +342,7 @@ const App: React.FC = () => {
 
   // --- Render Logic ---
   const renderContent = () => {
-    if (loading) {
+    if (loading && view !== 'login') {
       return (
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="text-center">
@@ -323,7 +361,7 @@ const App: React.FC = () => {
           <CategoriesPage
             categories={categories}
             onSelectCategory={(id: number) => navigate('subjects', id)}
-            onAddCategory={() => user ? setModalState({ type: 'addCategory' }) : setModalState({ type: 'login' })}
+            onAddCategory={() => (user ? setModalState({ type: 'addCategory' }) : openLoginView())}
             onEditCategory={(c: Category) => setModalState({ type: 'editCategory', category: c })}
             onDeleteCategory={(c: Category) =>
               setModalState({
@@ -342,7 +380,7 @@ const App: React.FC = () => {
             category={selectedCategory}
             onSelectSubject={(id: number) => navigate('confessions', selectedCategoryId, id)}
             onBack={handleBack}
-            onAddSubject={() => user ? setModalState({ type: 'addTheme' }) : setModalState({ type: 'login' })}
+            onAddSubject={() => (user ? setModalState({ type: 'addTheme' }) : openLoginView())}
             onEditSubject={(s: Theme) => setModalState({ type: 'editTheme', theme: s })}
             onDeleteSubject={(s: Theme) =>
               setModalState({
@@ -361,7 +399,7 @@ const App: React.FC = () => {
             subject={selectedTheme}
             onSelectConfession={(id: number) => navigate('confessionDetail', selectedCategoryId, selectedThemeId, id)}
             onBack={handleBack}
-            onAddConfession={() => user ? setModalState({ type: 'addConfession' }) : setModalState({ type: 'login' })}
+            onAddConfession={() => (user ? setModalState({ type: 'addConfession' }) : openLoginView())}
             onEditConfession={(c: Confession) => setModalState({ type: 'editConfession', confession: c })}
             onDeleteConfession={(c: Confession) =>
               setModalState({
@@ -379,7 +417,7 @@ const App: React.FC = () => {
           <ConfessionDetailPage
             confession={selectedConfession}
             onBack={handleBack}
-            onAddComment={() => user ? setModalState({ type: 'addComment' }) : setModalState({ type: 'login' })}
+            onAddComment={() => (user ? setModalState({ type: 'addComment' }) : openLoginView())}
             onEditComment={(c: Comment) => setModalState({ type: 'editComment', comment: c })}
             onDeleteComment={(c: Comment) =>
               setModalState({
@@ -391,6 +429,8 @@ const App: React.FC = () => {
             canModify={canModify}
           />
         );
+      case 'login':
+        return <LoginPage onLogin={handleLoginSuccess} />;
       default:
         return <HomePage onStart={() => navigate('categories')} />;
     }
@@ -405,8 +445,6 @@ const App: React.FC = () => {
     if (!modalState) return null;
 
     switch (modalState.type) {
-      case 'login':
-        return <LoginPage onLogin={handleLoginSuccess} />;
       case 'addCategory':
         return <AddCategoryForm onClose={closeModal} onSubmit={handleAddCategory} />;
       case 'editCategory':
@@ -438,6 +476,11 @@ const App: React.FC = () => {
     }
   };
 
+  const isLoginView = view === 'login';
+  const mainClassName = isLoginView
+    ? 'px-0 py-0'
+    : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12';
+
   return (
     <div className="bg-stone-50 min-h-screen font-sans">
       <Header
@@ -445,17 +488,19 @@ const App: React.FC = () => {
         onCategoriesClick={() => navigate('categories')}
         userId={user?.name || null}
         onLogout={handleLogout}
-        onLogin={() => setModalState({ type: 'login' })}
+        onLogin={openLoginView}
       />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">{renderContent()}</main>
-      <MobileNav
-        currentView={view}
-        onHomeClick={() => navigate('home')}
-        onCategoriesClick={() => navigate('categories')}
-        onAddClick={handleMobileAdd}
-      />
-      {renderModal()}
-      <div className="pb-20 md:pb-0"></div> {/* Spacer for mobile nav */}
+      <main className={mainClassName}>{renderContent()}</main>
+      {!isLoginView && (
+        <MobileNav
+          currentView={view}
+          onHomeClick={() => navigate('home')}
+          onCategoriesClick={() => navigate('categories')}
+          onAddClick={handleMobileAdd}
+        />
+      )}
+      {!isLoginView && renderModal()}
+      {!isLoginView && <div className="pb-20 md:pb-0"></div>}
     </div>
   );
 };

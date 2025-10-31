@@ -3,9 +3,18 @@
  * Handles authentication, token management, and HTTP requests
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api:v1';
+const API_BASE_URLS = {
+  auth: import.meta.env.VITE_API_BASE_URL_AUTH || 'http://localhost:8080/api:oF6y6S5v',
+  category: import.meta.env.VITE_API_BASE_URL_CATEGORY || 'http://localhost:8080/api:R2I6TP0n',
+  comment: import.meta.env.VITE_API_BASE_URL_COMMENT || 'http://localhost:8080/api:kRM_7IxH',
+  confession: import.meta.env.VITE_API_BASE_URL_CONFESSION || 'http://localhost:8080/api:scRn_GVD',
+  theme: import.meta.env.VITE_API_BASE_URL_THEME || 'http://localhost:8080/api:0lgBJOXe',
+};
+
 const AUTH_TOKEN_KEY = 'connexxion_auth_token';
 const USER_DATA_KEY = 'connexxion_user_data';
+
+export type ApiGroup = 'auth' | 'category' | 'comment' | 'confession' | 'theme';
 
 export interface ApiError {
   message: string;
@@ -14,12 +23,17 @@ export interface ApiError {
 }
 
 class ApiClient {
-  private baseUrl: string;
   private authToken: string | null;
 
   constructor() {
-    this.baseUrl = API_BASE_URL;
     this.authToken = localStorage.getItem(AUTH_TOKEN_KEY);
+  }
+
+  /**
+   * Get the base URL for a specific API group
+   */
+  private getBaseUrl(group: ApiGroup): string {
+    return API_BASE_URLS[group];
   }
 
   /**
@@ -57,10 +71,12 @@ class ApiClient {
    * Make an authenticated HTTP request
    */
   async request<T>(
+    group: ApiGroup,
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const url = `${this.baseUrl}${endpoint}`;
+    const baseUrl = this.getBaseUrl(group);
+    const url = `${baseUrl}${endpoint}`;
 
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
@@ -108,7 +124,7 @@ class ApiClient {
   /**
    * GET request
    */
-  async get<T>(endpoint: string, params?: Record<string, any>): Promise<T> {
+  async get<T>(group: ApiGroup, endpoint: string, params?: Record<string, any>): Promise<T> {
     const queryString = params
       ? '?' + new URLSearchParams(
           Object.entries(params)
@@ -117,7 +133,7 @@ class ApiClient {
         ).toString()
       : '';
 
-    return this.request<T>(`${endpoint}${queryString}`, {
+    return this.request<T>(group, `${endpoint}${queryString}`, {
       method: 'GET',
     });
   }
@@ -125,8 +141,8 @@ class ApiClient {
   /**
    * POST request
    */
-  async post<T>(endpoint: string, data?: any): Promise<T> {
-    return this.request<T>(endpoint, {
+  async post<T>(group: ApiGroup, endpoint: string, data?: any): Promise<T> {
+    return this.request<T>(group, endpoint, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
     });
@@ -135,8 +151,8 @@ class ApiClient {
   /**
    * PATCH request
    */
-  async patch<T>(endpoint: string, data?: any): Promise<T> {
-    return this.request<T>(endpoint, {
+  async patch<T>(group: ApiGroup, endpoint: string, data?: any): Promise<T> {
+    return this.request<T>(group, endpoint, {
       method: 'PATCH',
       body: data ? JSON.stringify(data) : undefined,
     });
@@ -145,8 +161,8 @@ class ApiClient {
   /**
    * PUT request
    */
-  async put<T>(endpoint: string, data?: any): Promise<T> {
-    return this.request<T>(endpoint, {
+  async put<T>(group: ApiGroup, endpoint: string, data?: any): Promise<T> {
+    return this.request<T>(group, endpoint, {
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
     });
@@ -155,8 +171,8 @@ class ApiClient {
   /**
    * DELETE request
    */
-  async delete<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, {
+  async delete<T>(group: ApiGroup, endpoint: string): Promise<T> {
+    return this.request<T>(group, endpoint, {
       method: 'DELETE',
     });
   }

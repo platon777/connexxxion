@@ -11,7 +11,7 @@ const USER_DATA_KEY = 'connexxion_user_data';
  * Login with email and password
  */
 export const login = async (credentials: LoginRequest): Promise<AuthResponse> => {
-  const response = await apiClient.post<AuthResponse>('/auth/login', credentials);
+  const response = await apiClient.post<AuthResponse>('auth', '/auth/login', credentials);
   apiClient.setAuthToken(response.authToken);
   return response;
 };
@@ -20,7 +20,7 @@ export const login = async (credentials: LoginRequest): Promise<AuthResponse> =>
  * Sign up new user
  */
 export const signup = async (userData: SignupRequest): Promise<AuthResponse> => {
-  const response = await apiClient.post<AuthResponse>('/auth/signup', userData);
+  const response = await apiClient.post<AuthResponse>('auth', '/auth/signup', userData);
   apiClient.setAuthToken(response.authToken);
   return response;
 };
@@ -29,7 +29,7 @@ export const signup = async (userData: SignupRequest): Promise<AuthResponse> => 
  * Get current user info
  */
 export const getCurrentUser = async (): Promise<User> => {
-  const user = await apiClient.get<User>('/auth/me');
+  const user = await apiClient.get<User>('auth', '/auth/me');
   localStorage.setItem(USER_DATA_KEY, JSON.stringify(user));
   return user;
 };

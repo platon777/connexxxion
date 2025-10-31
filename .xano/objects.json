@@ -102,7 +102,7 @@
     "id": 101,
     "type": "api_endpoint",
     "path": "apis\\category\\101_category_GET.xs",
-    "status": "unchanged",
+    "status": "changed",
     "staged": false,
     "sha256": "4a3087b63a3c3713830941ddd922272ff651b16f8a8c48c5f6ce9e8198638142",
     "original": "Ly8gUXVlcnkgYWxsIGNhdGVnb3J5IHJlY29yZHMKcXVlcnkgY2F0ZWdvcnkgdmVyYj1HRVQgewogIGlucHV0IHsKICB9CgogIHN0YWNrIHsKICAgIGRiLnF1ZXJ5IGNhdGVnb3J5IHsKICAgICAgcmV0dXJuID0ge3R5cGU6ICJsaXN0In0KICAgICAgYWRkb24gPSBbCiAgICAgICAgewogICAgICAgICAgbmFtZSA6ICJ0aGVtZV9vZl9jYXRlZ29yeV8xIgogICAgICAgICAgaW5wdXQ6IHtjYXRlZ29yeTogJG91dHB1dC5pZH0KICAgICAgICAgIGFzICAgOiAiX3RoZW1lX29mX2NhdGVnb3J5XzIiCiAgICAgICAgfQogICAgICBdCiAgICB9IGFzICRtb2RlbAogIH0KCiAgcmVzcG9uc2UgPSAkbW9kZWwKfQ=="
@@ -750,8 +750,8 @@
     "id": 6,
     "type": "add_on",
     "path": "addons\\6_theme_of_category_1.xs",
-    "status": "changed",
-    "staged": true,
+    "status": "unchanged",
+    "staged": false,
     "sha256": "a69f629c1e8dc61799e7c5d89718efd9c552670eda05f78fbd9064bd4461cbcc",
     "original": "YWRkb24gdGhlbWVfb2ZfY2F0ZWdvcnlfMSB7CiAgaW5wdXQgewogICAgaW50IGNhdGVnb3J5PyB7CiAgICAgIHRhYmxlID0gImNhdGVnb3J5IgogICAgfQogIH0KCiAgc3RhY2sgewogICAgZGIucXVlcnkgdGhlbWUgewogICAgICB3aGVyZSA9ICRkYi50aGVtZS5jYXRlZ29yeSA9PSAkaW5wdXQuY2F0ZWdvcnkKICAgICAgcmV0dXJuID0ge3R5cGU6ICJsaXN0In0KICAgIH0KICB9Cn0="
   },

@@ -9,21 +9,21 @@ import type { Confession } from '../types';
  * Get all confessions
  */
 export const getConfessions = async (): Promise<Confession[]> => {
-  return apiClient.get<Confession[]>('/confession');
+  return apiClient.get<Confession[]>('confession', '/confession');
 };
 
 /**
  * Get single confession by ID
  */
 export const getConfession = async (id: number): Promise<Confession> => {
-  return apiClient.get<Confession>(`/confession/${id}`);
+  return apiClient.get<Confession>('confession', `/confession/${id}`);
 };
 
 /**
  * Get confessions by theme
  */
 export const getConfessionsByTheme = async (themeId: number): Promise<Confession[]> => {
-  return apiClient.get<Confession[]>('/confession_by_theme', { theme_id: themeId });
+  return apiClient.get<Confession[]>('confession', '/confession_by_theme', { theme_id: themeId });
 };
 
 /**
@@ -37,7 +37,7 @@ export const createConfession = async (data: {
   view_count?: number;
   like_count?: number;
 }): Promise<Confession> => {
-  return apiClient.post<Confession>('/confession', {
+  return apiClient.post<Confession>('confession', '/confession', {
     ...data,
     view_count: data.view_count || 0,
     like_count: data.like_count || 0,
@@ -51,21 +51,21 @@ export const updateConfession = async (
   id: number,
   data: { title?: string; content?: string }
 ): Promise<Confession> => {
-  return apiClient.patch<Confession>(`/confession/${id}`, data);
+  return apiClient.patch<Confession>('confession', `/confession/${id}`, data);
 };
 
 /**
  * Delete confession
  */
 export const deleteConfession = async (id: number): Promise<void> => {
-  return apiClient.delete<void>(`/confession/${id}`);
+  return apiClient.delete<void>('confession', `/confession/${id}`);
 };
 
 /**
  * Add confession view
  */
 export const addConfessionView = async (confessionId: number, deviceId: string): Promise<void> => {
-  return apiClient.post('/confession_view', {
+  return apiClient.post('confession', '/confession_view', {
     confession: confessionId,
     device_id: deviceId,
   });

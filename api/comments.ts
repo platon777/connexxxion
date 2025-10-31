@@ -4,26 +4,46 @@
 
 import { apiClient } from './client';
 import type { Comment } from '../types';
+import type { User } from '../types';
+
+interface CommentByConfessResponse {
+  result1?: Array<
+    Comment & {
+      _user_object2?: User;
+      _number_like_comment?: number;
+    }
+  >;
+}
 
 /**
  * Get all comments
  */
 export const getComments = async (): Promise<Comment[]> => {
-  return apiClient.get<Comment[]>('/comment');
+  return apiClient.get<Comment[]>('comment', '/comment');
 };
 
 /**
  * Get single comment by ID
  */
 export const getComment = async (id: number): Promise<Comment> => {
-  return apiClient.get<Comment>(`/comment/${id}`);
+  return apiClient.get<Comment>('comment', `/comment/${id}`);
 };
 
 /**
  * Get comments by confession
  */
 export const getCommentsByConfession = async (confessionId: number): Promise<Comment[]> => {
-  return apiClient.get<Comment[]>('/comment_by_confess', { confession_id: confessionId });
+  const response = await apiClient.get<CommentByConfessResponse>('comment', '/comment_by_confess', {
+    confession_id: confessionId,
+  });
+
+  const items = response?.result1 ?? [];
+
+  return items.map(({ _number_like_comment, _user_object2, ...rest }) => ({
+    ...rest,
+    like_count: _number_like_comment ?? rest.like_count ?? 0,
+    _user_object: _user_object2 ?? rest._user_object,
+  }));
 };
 
 /**
@@ -35,7 +55,7 @@ export const createComment = async (data: {
   content: string;
   like_count?: number;
 }): Promise<Comment> => {
-  return apiClient.post<Comment>('/comment', {
+  return apiClient.post<Comment>('comment', '/comment', {
     ...data,
     like_count: data.like_count || 0,
   });
@@ -48,12 +68,12 @@ export const updateComment = async (
   id: number,
   data: { content: string }
 ): Promise<Comment> => {
-  return apiClient.patch<Comment>(`/comment/${id}`, data);
+  return apiClient.patch<Comment>('comment', `/comment/${id}`, data);
 };
 
 /**
  * Delete comment
  */
 export const deleteComment = async (id: number): Promise<void> => {
-  return apiClient.delete<void>(`/comment/${id}`);
+  return apiClient.delete<void>('comment', `/comment/${id}`);
 };

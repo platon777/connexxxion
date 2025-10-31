@@ -4,7 +4,7 @@ import ItemMenu from './ItemMenu';
 
 interface SubjectsPageProps {
   category: Category;
-  onSelectSubject: (subjectId: string) => void;
+  onSelectSubject: (subjectId: number) => void;
   onBack: () => void;
   onAddSubject: () => void;
   onEditSubject: (subject: Subject) => void;

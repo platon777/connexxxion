@@ -4,7 +4,7 @@ import ItemMenu from './ItemMenu';
 
 interface CategoriesPageProps {
   categories: Category[];
-  onSelectCategory: (categoryId: string) => void;
+  onSelectCategory: (categoryId: number) => void;
   onAddCategory: () => void;
   onEditCategory: (category: Category) => void;
   onDeleteCategory: (category: Category) => void;
