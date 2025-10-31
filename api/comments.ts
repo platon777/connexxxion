@@ -43,12 +43,21 @@ export const getCommentsByConfession = async (confessionId: number): Promise<Com
 
   const items = response?.result1 ?? [];
 
-  return items.map(({ _number_like_comment, _user_object2, _is_liked_comment, ...rest }) => ({
-    ...rest,
-    like_count: _number_like_comment ?? rest.like_count ?? 0,
-    _user_object: _user_object2 ?? rest._user_object,
-    _is_liked: typeof _is_liked_comment === 'boolean' ? _is_liked_comment : rest._is_liked,
-  }));
+  return items.map(({ _number_like_comment, _user_object2, _is_liked_comment, ...rest }) => {
+    const normalizedIsLiked =
+      typeof _is_liked_comment === 'boolean'
+        ? _is_liked_comment
+        : _is_liked_comment === 1
+        ? true
+        : rest._is_liked === true;
+
+    return {
+      ...rest,
+      like_count: _number_like_comment ?? rest.like_count ?? 0,
+      _user_object: _user_object2 ?? rest._user_object,
+      _is_liked: normalizedIsLiked,
+    };
+  });
 };
 
 /**

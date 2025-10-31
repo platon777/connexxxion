@@ -7,6 +7,7 @@ import {
   commentService,
   authService,
   likeService,
+  getDeviceId,
 } from './api';
 
 import Header from './components/Header';
@@ -36,6 +37,13 @@ const App: React.FC = () => {
 
   // --- Load initial data ---
   useEffect(() => {
+    void (async () => {
+      try {
+        await getDeviceId();
+      } catch (error) {
+        console.warn('Unable to prefetch device id:', error);
+      }
+    })();
     loadCategories();
   }, []);
 
@@ -65,6 +73,31 @@ const App: React.FC = () => {
       }));
     } catch (error) {
       console.error(`Failed to load comments for confession ${confessionId}:`, error);
+    }
+  };
+
+  const loadConfessionDetail = async (confessionId: number) => {
+    try {
+      const detail = (await confessionService.getConfession(confessionId)) as Confession & {
+        number_of_like?: number;
+        number_of_comments?: number;
+        is_liked?: number | boolean;
+      };
+      const likeCount = detail.number_of_like ?? detail.like_count ?? 0;
+      const commentCount = detail.number_of_comments ?? detail.comment_count ?? 0;
+      const isLiked =
+        detail.is_liked === true || detail.is_liked === 1 || detail._is_liked === true;
+
+      updateConfessionInState(confessionId, (current) => ({
+        ...current,
+        like_count: likeCount,
+        real_like_count: likeCount,
+        comment_count: commentCount,
+        _is_liked: isLiked,
+        view_count: detail.view_count ?? current.view_count,
+      }));
+    } catch (error) {
+      console.error(`Failed to load confession detail ${confessionId}:`, error);
     }
   };
 
@@ -331,6 +364,7 @@ const App: React.FC = () => {
     setSelectedConfessionId(confId);
 
     if (newView === 'confessionDetail' && confId !== null) {
+      loadConfessionDetail(confId);
       loadConfessionComments(confId);
     }
   };
@@ -549,20 +583,11 @@ const App: React.FC = () => {
 
   const handleToggleConfessionLike = async (confession: Confession) => {
     try {
-      const { isLiked } = await likeService.toggleConfessionLike(confession.id);
-      const diff = isLiked ? 1 : -1;
-
-      updateConfessionInState(confession.id, (current) => {
-        const currentCount = current.real_like_count ?? current.like_count ?? 0;
-        const nextCount = Math.max(0, currentCount + diff);
-
-        return {
-          ...current,
-          real_like_count: nextCount,
-          like_count: nextCount,
-          _is_liked: isLiked,
-        };
-      });
+      await likeService.toggleConfessionLike(confession.id);
+      await loadConfessionDetail(confession.id);
+      if (selectedConfessionId === confession.id) {
+        await loadConfessionComments(confession.id);
+      }
     } catch (error) {
       console.error('Failed to toggle confession like:', error);
       alert('Erreur lors de la mise a jour du like de la confession');
@@ -571,23 +596,13 @@ const App: React.FC = () => {
 
   const handleToggleCommentLike = async (comment: Comment) => {
     try {
-      const { isLiked } = await likeService.toggleCommentLike(comment.id);
-      const diff = isLiked ? 1 : -1;
       const confessionId = comment.confession ?? selectedConfessionId;
       if (!confessionId) {
         return;
       }
-
-      updateCommentInState(confessionId, comment.id, (current) => {
-        const currentCount = current.like_count ?? 0;
-        const nextCount = Math.max(0, currentCount + diff);
-
-        return {
-          ...current,
-          like_count: nextCount,
-          _is_liked: isLiked,
-        };
-      });
+      await likeService.toggleCommentLike(comment.id);
+      await loadConfessionComments(confessionId);
+      await loadConfessionDetail(confessionId);
     } catch (error) {
       console.error('Failed to toggle comment like:', error);
       alert('Erreur lors de la mise a jour du like du commentaire');

@@ -9,6 +9,7 @@ table user {
     email? email filters=trim|lower
     password? password filters=min:8|minAlpha:1|minDigit:1
     text role? filters=trim
+    int? sexe?
   }
 
   index = [

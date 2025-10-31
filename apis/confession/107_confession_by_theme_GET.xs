@@ -1,6 +1,9 @@
 query confession_by_theme verb=GET {
   input {
     int theme_id?
+  
+    // Optional unique identifier for the client device.
+    text? device_id?
   }
 
   stack {
@@ -24,19 +27,9 @@ query confession_by_theme verb=GET {
           as   : "real_like_count"
         }
         {
-          name : "user_object"
+          name : "user_confession"
           input: {user_id: $output.user}
-          as   : "_user_object"
-        }
-        {
-          name : "user_object"
-          input: {user_id: $output.user}
-          as   : "_user_object"
-        }
-        {
-          name : "user"
-          input: {user_id: $output.user}
-          as   : "_user_object34"
+          as   : "_user_confession"
         }
       ]
     } as $model

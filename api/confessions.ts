@@ -4,6 +4,7 @@
 
 import { apiClient } from './client';
 import type { Confession } from '../types';
+import { getDeviceId } from './utils';
 
 /**
  * Get all confessions
@@ -16,7 +17,10 @@ export const getConfessions = async (): Promise<Confession[]> => {
  * Get single confession by ID
  */
 export const getConfession = async (id: number): Promise<Confession> => {
-  return apiClient.get<Confession>('confession', `/confession/${id}`);
+  const deviceId = await getDeviceId();
+  return apiClient.get<Confession>('confession', `/confession/${id}`, {
+    device_id: deviceId,
+  });
 };
 
 /**

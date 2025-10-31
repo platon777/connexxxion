@@ -4,6 +4,7 @@ query "auth/signup" verb=POST {
     text name?
     email email? filters=lower|trim
     password password?
+    int? sexe?
   }
 
   stack {
@@ -23,6 +24,8 @@ query "auth/signup" verb=POST {
         name      : $input.name
         email     : $input.email
         password  : $input.password
+        role      : ""
+        sexe      : $input.sexe
       }
     } as $user
   
