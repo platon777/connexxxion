@@ -10,7 +10,7 @@ import { getDeviceId } from './utils';
  * Returns whether the confession is now liked
  */
 export const toggleConfessionLike = async (confessionId: number): Promise<{ isLiked: boolean }> => {
-  const deviceId = getDeviceId();
+  const deviceId = await getDeviceId();
 
   const response = await apiClient.post<any>('confession', '/confession_like', {
     confession: confessionId,
@@ -28,7 +28,7 @@ export const toggleConfessionLike = async (confessionId: number): Promise<{ isLi
  * Returns whether the comment is now liked
  */
 export const toggleCommentLike = async (commentId: number): Promise<{ isLiked: boolean }> => {
-  const deviceId = getDeviceId();
+  const deviceId = await getDeviceId();
 
   const response = await apiClient.post<any>('comment', '/comment_like', {
     comment: commentId,

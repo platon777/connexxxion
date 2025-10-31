@@ -35,9 +35,10 @@ export const getComment = async (id: number): Promise<Comment> => {
  * Get comments by confession
  */
 export const getCommentsByConfession = async (confessionId: number): Promise<Comment[]> => {
+  const deviceId = await getDeviceId();
   const response = await apiClient.get<CommentByConfessResponse>('comment', '/comment_by_confess', {
     confession_id: confessionId,
-    device_id: getDeviceId(),
+    device_id: deviceId,
   });
 
   const items = response?.result1 ?? [];
