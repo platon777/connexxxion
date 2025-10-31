@@ -8,6 +8,7 @@ export interface User {
   name: string;
   email?: string;
   role?: string;
+  sex?: number;
 }
 
 export interface Comment {
@@ -32,6 +33,9 @@ export interface Confession {
   view_count: number;
   like_count: number;
   comment_count: number;
+  number_of_like?: number;
+  number_of_comments?: number;
+  is_liked?: boolean | number;
   // Addon fields
   _theme?: Theme;
   _user_object?: User;
@@ -102,6 +106,7 @@ export interface SignupRequest {
   name: string;
   email: string;
   password: string;
+  sex: number;
 }
 
 // ============================================

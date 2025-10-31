@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { logoBase64 } from '../assets/logo';
+import logoImg from '../assets/logo.jpg';
 import { authService } from '../api';
 import type { User } from '../types';
 
@@ -17,6 +17,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [sex, setSex] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,6 +35,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       return;
     }
 
+    if (mode === 'signup' && !sex) {
+      setError('Veuillez selectionner votre sexe.');
+      return;
+    }
+
     if (!email.trim()) {
       setError('L email est requis.');
       return;
@@ -45,7 +51,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       if (mode === 'login') {
         await authService.login({ email, password });
       } else {
-        await authService.signup({ name, email, password });
+        await authService.signup({ name, email, password, sex: Number(sex) });
       }
 
       const user = await authService.getCurrentUser();
@@ -64,7 +70,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         <div className="w-full md:w-1/2 p-8 flex flex-col justify-between bg-gradient-to-br from-yellow-400 to-amber-400 text-white">
           <div>
             <div className="bg-white p-2 rounded-md inline-block shadow-md">
-              <img src={logoBase64} alt="ConneXXion Logo" className="h-12" />
+              <img src={logoImg} alt="ConneXXion Logo" className="h-12" />
             </div>
             <p className="mt-8 text-lg leading-relaxed">
               Bienvenue sur ConneXXion. Votre espace intime pour partager, echanger et rencontrer des partenaires avec discretion.
@@ -181,6 +187,25 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                   className="mt-2 w-full px-4 py-3 bg-gray-100 rounded-lg border-2 border-transparent focus:border-yellow-400 focus:ring-0 outline-none transition"
                   required={mode === 'signup'}
                 />
+              </div>
+            )}
+
+            {mode === 'signup' && (
+              <div>
+                <label className="text-sm font-medium text-gray-700" htmlFor="sex">
+                  Sexe
+                </label>
+                <select
+                  id="sex"
+                  value={sex}
+                  onChange={(event) => setSex(event.target.value)}
+                  className="mt-2 w-full px-4 py-3 bg-gray-100 rounded-lg border-2 border-transparent focus:border-yellow-400 focus:ring-0 outline-none transition"
+                  required
+                >
+                  <option value="">Choisir...</option>
+                  <option value="1">Garcon</option>
+                  <option value="2">Fille</option>
+                </select>
               </div>
             )}
 

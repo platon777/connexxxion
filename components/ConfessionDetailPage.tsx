@@ -4,7 +4,16 @@ import ItemMenu from './ItemMenu';
 
 const PEACH_ICON = String.fromCodePoint(0x1f351);
 const GRAPE_ICON = String.fromCodePoint(0x1f347);
+const BOY_ICON = String.fromCodePoint(0x1f466);
+const GIRL_ICON = String.fromCodePoint(0x1f467);
 const COMMENTS_PER_PAGE = 10;
+
+const getGenderIcon = (sex?: number | string): string => {
+  const normalized = typeof sex === 'string' ? parseInt(sex, 10) : sex;
+  if (normalized === 1) return BOY_ICON;
+  if (normalized === 2) return GIRL_ICON;
+  return '';
+};
 
 interface ConfessionDetailPageProps {
   confession: Confession;
@@ -25,6 +34,7 @@ const CommentCard: React.FC<{
   canModify: boolean;
 }> = ({ comment, onEdit, onDelete, onToggleLike, canModify }) => {
   const authorName = comment._user_object?.name || 'Anonyme';
+  const genderIcon = getGenderIcon(comment._user_object?.sex);
   const formattedDate = new Date(comment.created_at).toLocaleDateString('fr-FR', {
     day: 'numeric',
     month: 'short',
@@ -44,7 +54,10 @@ const CommentCard: React.FC<{
         </div>
         <div className="flex-1 pr-2">
           <div className="flex items-center justify-between">
-            <p className="font-semibold text-gray-800">{authorName}</p>
+            <p className="font-semibold text-gray-800 flex items-center space-x-2">
+              {genderIcon && <span>{genderIcon}</span>}
+              <span>{authorName}</span>
+            </p>
             <p className="text-xs text-gray-400">{formattedDate}</p>
           </div>
           <p className="text-gray-600 mt-1">{comment.content}</p>
@@ -80,6 +93,7 @@ const ConfessionDetailPage: React.FC<ConfessionDetailPageProps> = ({
   const comments = Array.isArray(confession._comment_of_confession) ? confession._comment_of_confession : [];
   const commentsToShow = comments.slice(0, visibleCommentsCount);
   const authorName = confession._user_object?.name || 'Anonyme';
+  const confessionGenderIcon = getGenderIcon(confession._user_object?.sex);
   const formattedDate = new Date(confession.created_at).toLocaleDateString('fr-FR', {
     day: 'numeric',
     month: 'short',
@@ -107,6 +121,7 @@ const ConfessionDetailPage: React.FC<ConfessionDetailPageProps> = ({
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
+            {confessionGenderIcon && <span>{confessionGenderIcon}</span>}
             <span>{authorName}</span>
           </div>
           <div className="flex items-center space-x-2">

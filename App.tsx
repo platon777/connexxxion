@@ -78,23 +78,27 @@ const App: React.FC = () => {
 
   const loadConfessionDetail = async (confessionId: number) => {
     try {
-      const detail = (await confessionService.getConfession(confessionId)) as Confession & {
-        number_of_like?: number;
-        number_of_comments?: number;
-        is_liked?: number | boolean;
-      };
-      const likeCount = detail.number_of_like ?? detail.like_count ?? 0;
-      const commentCount = detail.number_of_comments ?? detail.comment_count ?? 0;
-      const isLiked =
-        detail.is_liked === true || detail.is_liked === 1 || detail._is_liked === true;
+      const response = (await confessionService.getConfession(confessionId)) as any;
+      const detail: Confession = response?.result1 ?? response;
+      const likeCount = response?.number_of_like ?? detail?.like_count ?? 0;
+      const commentCount = response?.number_of_comments ?? detail?.comment_count ?? 0;
+      const isLikedRaw = response?.is_liked ?? detail?._is_liked ?? detail?.is_liked;
+      const isLiked = isLikedRaw === true || isLikedRaw === 1;
+      const userObject =
+        detail?._user_object ??
+        (detail as any)?._user_10 ??
+        (detail as any)?._user ??
+        undefined;
 
       updateConfessionInState(confessionId, (current) => ({
         ...current,
+        ...detail,
         like_count: likeCount,
         real_like_count: likeCount,
         comment_count: commentCount,
         _is_liked: isLiked,
-        view_count: detail.view_count ?? current.view_count,
+        view_count: detail?.view_count ?? current.view_count,
+        _user_object: userObject ?? current._user_object,
       }));
     } catch (error) {
       console.error(`Failed to load confession detail ${confessionId}:`, error);
@@ -214,6 +218,19 @@ const App: React.FC = () => {
   };
 
   const isAdmin = user?.role?.toLowerCase() === 'admin';
+  const isAuthenticated = Boolean(user);
+  const showMobileAddButton = (() => {
+    if (isAdmin) {
+      return true;
+    }
+    if (!isAuthenticated) {
+      return false;
+    }
+    if (view === 'confessions' || view === 'confessionDetail') {
+      return true;
+    }
+    return false;
+  })();
 
   const requireAdmin = () => {
     if (!user) {
@@ -610,6 +627,9 @@ const App: React.FC = () => {
   };
 
   const handleMobileAdd = () => {
+    if (!showMobileAddButton) {
+      return;
+    }
     if (!user) {
       openLoginView();
       return;
@@ -769,6 +789,7 @@ const App: React.FC = () => {
           onHomeClick={() => navigate('home')}
           onCategoriesClick={() => navigate('categories')}
           onAddClick={handleMobileAdd}
+          showAddButton={showMobileAddButton}
         />
       )}
       {!isLoginView && renderModal()}
