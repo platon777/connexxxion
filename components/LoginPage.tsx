@@ -132,15 +132,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 <label className="text-sm font-medium text-gray-700" htmlFor="name">
                   Nom d utilisateur
                 </label>
-                <input
-                  id="name"
-                  type="text"
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  placeholder="pseudonyme"
-                  className="mt-2 w-full px-4 py-3 bg-gray-100 rounded-lg border-2 border-transparent focus:border-yellow-400 focus:ring-0 outline-none transition"
-                  required={mode === 'signup'}
-                />
+               <input  id="name"
+  type="text"
+  value={name}
+  onChange={(event) => setName(event.target.value)}
+  placeholder="kitanago05,pussycat509,bigdickontown"
+  className="mt-2 w-full px-4 py-3 bg-gray-100 rounded-lg border-2 border-transparent focus:border-yellow-400 focus:ring-0 outline-none transition placeholder:text-sm"
+  required={mode === 'signup'}
+/>
+
               </div>
             )}
 
@@ -153,7 +153,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                placeholder="vous@example.com"
+                placeholder="vous@gmail.com"
                 className="mt-2 w-full px-4 py-3 bg-gray-100 rounded-lg border-2 border-transparent focus:border-yellow-400 focus:ring-0 outline-none transition"
                 required
               />
@@ -168,7 +168,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                placeholder={mode === 'signup' ? 'Minimum 8 caracteres' : ''}
+                placeholder={mode === 'signup' ? 'Minimum 5 caracteres' : ''}
                 className="mt-2 w-full px-4 py-3 bg-gray-100 rounded-lg border-2 border-transparent focus:border-yellow-400 focus:ring-0 outline-none transition"
                 required
               />
