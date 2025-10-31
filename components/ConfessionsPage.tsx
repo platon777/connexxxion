@@ -60,8 +60,8 @@ const ConfessionCard: React.FC<{
   const likeCount = confession.real_like_count ?? confession.like_count ?? 0;
   const viewCount = confession.view_count ?? 0;
   const isLiked = Boolean(confession._is_liked);
-  const authorName = confession._user_object?.name || 'Anonyme';
-  const genderIcon = getGenderIcon(confession._user_object?.sex);
+  const authorSex = confession._user_object?.sex ?? (confession._user_object as any)?.sexe;
+  const genderIcon = getGenderIcon(authorSex);
   const formattedDate = new Date(confession.created_at).toLocaleDateString('fr-FR', {
     day: 'numeric',
     month: 'short',
@@ -78,11 +78,11 @@ const ConfessionCard: React.FC<{
       <div onClick={onClick} className="cursor-pointer flex-grow">
         <div className="flex items-center justify-between text-sm text-gray-400 mb-4">
           <div className="flex items-center space-x-2">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            {/* <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
+            </svg> */}
             {genderIcon && <span>{genderIcon}</span>}
-            <span>{authorName}</span>
+            <span>Anonyme</span>
           </div>
           <div className="flex items-center space-x-2">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

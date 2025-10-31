@@ -51,10 +51,19 @@ export const getCommentsByConfession = async (confessionId: number): Promise<Com
         ? true
         : rest._is_liked === true;
 
+    const rawUser = _user_object2 ?? (rest as any)._user_object ?? undefined;
+    const normalizedUser =
+      rawUser != null
+        ? {
+            ...rawUser,
+            sex: rawUser.sex ?? rawUser.sexe ?? rawUser.Sex ?? rawUser.gender,
+          }
+        : undefined;
+
     return {
       ...rest,
       like_count: _number_like_comment ?? rest.like_count ?? 0,
-      _user_object: _user_object2 ?? rest._user_object,
+      _user_object: normalizedUser,
       _is_liked: normalizedIsLiked,
     };
   });

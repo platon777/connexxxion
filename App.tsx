@@ -98,7 +98,18 @@ const App: React.FC = () => {
         comment_count: commentCount,
         _is_liked: isLiked,
         view_count: detail?.view_count ?? current.view_count,
-        _user_object: userObject ?? current._user_object,
+        _user_object:
+          userObject != null
+            ? {
+                ...userObject,
+                sex:
+                  (userObject as any).sex ??
+                  (userObject as any).sexe ??
+                  (userObject as any).Sex ??
+                  (userObject as any).gender ??
+                  current._user_object?.sex,
+              }
+            : current._user_object,
       }));
     } catch (error) {
       console.error(`Failed to load confession detail ${confessionId}:`, error);

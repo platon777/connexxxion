@@ -107,6 +107,7 @@ export interface SignupRequest {
   email: string;
   password: string;
   sex: number;
+  sexe?: number;
 }
 
 // ============================================

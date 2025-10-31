@@ -20,7 +20,12 @@ export const login = async (credentials: LoginRequest): Promise<AuthResponse> =>
  * Sign up new user
  */
 export const signup = async (userData: SignupRequest): Promise<AuthResponse> => {
-  const response = await apiClient.post<AuthResponse>('auth', '/auth/signup', userData);
+  const payload = {
+    ...userData,
+    sex: userData.sex,
+    sexe: userData.sex,
+  };
+  const response = await apiClient.post<AuthResponse>('auth', '/auth/signup', payload);
   apiClient.setAuthToken(response.authToken);
   return response;
 };

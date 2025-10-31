@@ -34,7 +34,7 @@ const CommentCard: React.FC<{
   canModify: boolean;
 }> = ({ comment, onEdit, onDelete, onToggleLike, canModify }) => {
   const authorName = comment._user_object?.name || 'Anonyme';
-  const genderIcon = getGenderIcon(comment._user_object?.sex);
+  const genderIcon = getGenderIcon(comment._user_object?.sex ?? (comment._user_object as any)?.sexe);
   const formattedDate = new Date(comment.created_at).toLocaleDateString('fr-FR', {
     day: 'numeric',
     month: 'short',
@@ -92,8 +92,7 @@ const ConfessionDetailPage: React.FC<ConfessionDetailPageProps> = ({
 
   const comments = Array.isArray(confession._comment_of_confession) ? confession._comment_of_confession : [];
   const commentsToShow = comments.slice(0, visibleCommentsCount);
-  const authorName = confession._user_object?.name || 'Anonyme';
-  const confessionGenderIcon = getGenderIcon(confession._user_object?.sex);
+  const confessionGenderIcon = getGenderIcon(confession._user_object?.sex ?? (confession._user_object as any)?.sexe);
   const formattedDate = new Date(confession.created_at).toLocaleDateString('fr-FR', {
     day: 'numeric',
     month: 'short',
@@ -118,16 +117,16 @@ const ConfessionDetailPage: React.FC<ConfessionDetailPageProps> = ({
       <div className="bg-white p-8 rounded-2xl shadow-lg mb-10 border border-yellow-200">
         <div className="flex items-center justify-between text-sm text-gray-400 mb-4">
           <div className="flex items-center space-x-2">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            {/* <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
+            </svg> */}
             {confessionGenderIcon && <span>{confessionGenderIcon}</span>}
-            <span>{authorName}</span>
+            <span>Anonyme</span>
           </div>
           <div className="flex items-center space-x-2">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            {/* <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            </svg> */}
             <span>{formattedDate}</span>
           </div>
         </div>
@@ -156,9 +155,9 @@ const ConfessionDetailPage: React.FC<ConfessionDetailPageProps> = ({
             onClick={onAddComment}
             className="flex items-center space-x-2 px-4 py-2 bg-yellow-100 text-yellow-800 font-semibold text-sm rounded-full shadow-sm hover:bg-yellow-200 transition-all duration-300 transform hover:scale-105"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            {/* <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-            </svg>
+            </svg> */}
             <span>Commenter</span>
           </button>
         </div>
