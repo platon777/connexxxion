@@ -109,7 +109,7 @@ const ConfessionCard: React.FC<{
           <span className="text-lg">{GRAPE_ICON}</span>
           <span>{commentsCount}</span>
         </div>
-        <div className="flex items-center space-x-1 text-gray-500">
+        {/* <div className="flex items-center space-x-1 text-gray-500">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
             <path
               fillRule="evenodd"
@@ -118,7 +118,7 @@ const ConfessionCard: React.FC<{
             />
           </svg>
           <span>{viewCount}</span>
-        </div>
+        </div> */}
       </div>
       {canModify && <ItemMenu onEdit={onEdit} onDelete={onDelete} />}
     </div>
