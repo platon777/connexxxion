@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import type { Category, Theme, Confession, Comment, View, ModalState, User } from './types';
 import {
   categoryService,
@@ -109,11 +109,142 @@ const App: React.FC = () => {
     setView('login');
   };
 
-  const canModify = (item?: { user?: number | null }) => {
+  const isAdmin = user?.role === 'admin';
+
+  const requireAdmin = () => {
+    if (!user) {
+      openLoginView();
+      return false;
+    }
+    if (!isAdmin) {
+      alert('Cette action est reservee aux administrateurs.');
+      return false;
+    }
+    return true;
+  };
+
+  const canManageCategory = () => Boolean(isAdmin);
+  const canManageTheme = () => Boolean(isAdmin);
+  const canManageConfession = (item?: { user?: number | null }) => {
     if (!user) return false;
-    if (user.role === 'admin') return true;
-    if (!item || item.user == null) return true;
-    return user.id === item.user;
+    if (isAdmin) return true;
+    return item?.user === user.id;
+  };
+  const canManageComment = (item?: { user?: number | null }) => {
+    if (!user) return false;
+    if (isAdmin) return true;
+    return item?.user === user.id;
+  };
+
+  const canModifyConfessionForUI = (item?: { user?: number | null }) => {
+    if (!item || item.user == null) {
+      return Boolean(user);
+    }
+    return canManageConfession(item);
+  };
+
+  const ensureLoggedIn = () => {
+    if (!user) {
+      openLoginView();
+      return false;
+    }
+    return true;
+  };
+
+  const openAddCategoryModal = () => {
+    if (!ensureLoggedIn()) return;
+    if (!canManageCategory()) {
+      alert('Seul un administrateur peut ajouter une categorie.');
+      return;
+    }
+    setModalState({ type: 'addCategory' });
+  };
+
+  const openAddThemeModal = () => {
+    if (!ensureLoggedIn()) return;
+    if (!canManageTheme()) {
+      alert('Seul un administrateur peut ajouter un sujet.');
+      return;
+    }
+    setModalState({ type: 'addTheme' });
+  };
+
+  const openAddConfessionModal = () => {
+    if (!ensureLoggedIn()) return;
+    setModalState({ type: 'addConfession' });
+  };
+
+  const openAddCommentModal = () => {
+    if (!ensureLoggedIn()) return;
+    setModalState({ type: 'addComment' });
+  };
+
+  const openEditCategoryModal = (category: Category) => {
+    if (!requireAdmin()) return;
+    setModalState({ type: 'editCategory', category });
+  };
+
+  const openDeleteCategoryModal = (category: Category) => {
+    if (!requireAdmin()) return;
+    setModalState({
+      type: 'confirmDelete',
+      message: 'Supprimer cette categorie et tous ses sujets ?',
+      onConfirm: () => handleDeleteCategory(category),
+    });
+  };
+
+  const openEditThemeModal = (theme: Theme) => {
+    if (!requireAdmin()) return;
+    setModalState({ type: 'editTheme', theme });
+  };
+
+  const openDeleteThemeModal = (theme: Theme) => {
+    if (!requireAdmin()) return;
+    setModalState({
+      type: 'confirmDelete',
+      message: 'Supprimer ce sujet et toutes ses confessions ?',
+      onConfirm: () => handleDeleteTheme(theme),
+    });
+  };
+
+  const openEditConfessionModal = (confession: Confession) => {
+    if (!canManageConfession(confession)) {
+      alert('Vous ne pouvez pas modifier cette confession.');
+      return;
+    }
+    setModalState({ type: 'editConfession', confession });
+  };
+
+  const openDeleteConfessionModal = (confession: Confession) => {
+    if (!canManageConfession(confession)) {
+      alert('Vous ne pouvez pas supprimer cette confession.');
+      return;
+    }
+    setModalState({
+      type: 'confirmDelete',
+      message: 'Supprimer cette confession ?',
+      onConfirm: () => handleDeleteConfession(confession),
+    });
+  };
+
+  const openEditCommentModal = (comment: Comment) => {
+    if (!canManageComment(comment)) {
+      alert('Vous ne pouvez pas modifier ce commentaire.');
+      return;
+    }
+    setModalState({ type: 'editComment', comment });
+  };
+
+  const openDeleteCommentModal = (comment: Comment) => {
+    if (!canManageComment(comment)) {
+      alert('Vous ne pouvez pas supprimer ce commentaire.');
+      return;
+    }
+    setModalState({
+      type: 'confirmDelete',
+      message: 'Supprimer ce commentaire ?',
+      onConfirm: () => handleDeleteComment(comment),
+    });
   };
 
   // --- Navigation ---
@@ -148,44 +279,47 @@ const App: React.FC = () => {
 
   // Category
   const handleAddCategory = async (name: string) => {
-    if (!user) return;
+    if (!requireAdmin()) return;
     try {
       await categoryService.createCategory({ name });
       await loadCategories();
       closeModal();
     } catch (error) {
       console.error('Failed to create category:', error);
-      alert('Erreur lors de la création de la catégorie');
+      alert('Erreur lors de la creation de la categorie');
     }
   };
 
   const handleEditCategory = async (name: string) => {
     if (modalState?.type === 'editCategory') {
+      if (!requireAdmin()) return;
       try {
         await categoryService.updateCategory(modalState.category.id, { name });
         await loadCategories();
         closeModal();
       } catch (error) {
         console.error('Failed to update category:', error);
-        alert('Erreur lors de la modification de la catégorie');
+        alert('Erreur lors de la modification de la categorie');
       }
     }
   };
 
   const handleDeleteCategory = async (category: Category) => {
+    if (!requireAdmin()) return;
     try {
       await categoryService.deleteCategory(category.id);
       await loadCategories();
       closeModal();
     } catch (error) {
       console.error('Failed to delete category:', error);
-      alert('Erreur lors de la suppression de la catégorie');
+      alert('Erreur lors de la suppression de la categorie');
     }
   };
 
   // Theme (Subject)
   const handleAddTheme = async (title: string) => {
-    if (!user || !selectedCategoryId) return;
+    if (!selectedCategoryId) return;
+    if (!requireAdmin()) return;
     try {
       await themeService.createTheme({
         name: title,
@@ -195,12 +329,13 @@ const App: React.FC = () => {
       closeModal();
     } catch (error) {
       console.error('Failed to create theme:', error);
-      alert('Erreur lors de la création du sujet');
+      alert('Erreur lors de la creation du sujet');
     }
   };
 
   const handleEditTheme = async (title: string) => {
     if (modalState?.type === 'editTheme') {
+      if (!requireAdmin()) return;
       try {
         await themeService.updateTheme(modalState.theme.id, { name: title });
         await loadCategories();
@@ -213,6 +348,7 @@ const App: React.FC = () => {
   };
 
   const handleDeleteTheme = async (theme: Theme) => {
+    if (!requireAdmin()) return;
     try {
       await themeService.deleteTheme(theme.id);
       await loadCategories();
@@ -225,7 +361,11 @@ const App: React.FC = () => {
 
   // Confession
   const handleAddConfession = async (content: string) => {
-    if (!user || !selectedThemeId) return;
+    if (!user) {
+      openLoginView();
+      return;
+    }
+    if (!selectedThemeId) return;
     try {
       await confessionService.createConfession({
         user: user.id,
@@ -237,12 +377,16 @@ const App: React.FC = () => {
       closeModal();
     } catch (error) {
       console.error('Failed to create confession:', error);
-      alert('Erreur lors de la création de la confession');
+      alert('Erreur lors de la creation de la confession');
     }
   };
 
   const handleEditConfession = async (content: string) => {
     if (modalState?.type === 'editConfession') {
+      if (!canManageConfession(modalState.confession)) {
+        alert('Vous ne pouvez pas modifier cette confession.');
+        return;
+      }
       try {
         await confessionService.updateConfession(modalState.confession.id, {
           content,
@@ -258,6 +402,10 @@ const App: React.FC = () => {
   };
 
   const handleDeleteConfession = async (confession: Confession) => {
+    if (!canManageConfession(confession)) {
+      alert('Vous ne pouvez pas supprimer cette confession.');
+      return;
+    }
     try {
       await confessionService.deleteConfession(confession.id);
       await loadCategories();
@@ -270,7 +418,11 @@ const App: React.FC = () => {
 
   // Comment
   const handleAddComment = async (content: string) => {
-    if (!user || !selectedConfessionId) return;
+    if (!user) {
+      openLoginView();
+      return;
+    }
+    if (!selectedConfessionId) return;
     try {
       await commentService.createComment({
         user: user.id,
@@ -282,12 +434,16 @@ const App: React.FC = () => {
       closeModal();
     } catch (error) {
       console.error('Failed to create comment:', error);
-      alert('Erreur lors de la création du commentaire');
+      alert('Erreur lors de la creation du commentaire');
     }
   };
 
   const handleEditComment = async (content: string) => {
     if (modalState?.type === 'editComment') {
+      if (!canManageComment(modalState.comment)) {
+        alert('Vous ne pouvez pas modifier ce commentaire.');
+        return;
+      }
       try {
         await commentService.updateComment(modalState.comment.id, { content });
         await loadCategories();
@@ -303,6 +459,10 @@ const App: React.FC = () => {
   };
 
   const handleDeleteComment = async (comment: Comment) => {
+    if (!canManageComment(comment)) {
+      alert('Vous ne pouvez pas supprimer ce commentaire.');
+      return;
+    }
     try {
       await commentService.deleteComment(comment.id);
       await loadCategories();
@@ -324,23 +484,22 @@ const App: React.FC = () => {
 
     switch (view) {
       case 'categories':
-        setModalState({ type: 'addCategory' });
+        openAddCategoryModal();
         break;
       case 'subjects':
-        setModalState({ type: 'addTheme' });
+        openAddThemeModal();
         break;
       case 'confessions':
-        setModalState({ type: 'addConfession' });
+        openAddConfessionModal();
         break;
       case 'confessionDetail':
-        setModalState({ type: 'addComment' });
+        openAddCommentModal();
         break;
       default:
         break;
     }
   };
 
-  // --- Render Logic ---
   const renderContent = () => {
     if (loading && view !== 'login') {
       return (
@@ -361,72 +520,48 @@ const App: React.FC = () => {
           <CategoriesPage
             categories={categories}
             onSelectCategory={(id: number) => navigate('subjects', id)}
-            onAddCategory={() => (user ? setModalState({ type: 'addCategory' }) : openLoginView())}
-            onEditCategory={(c: Category) => setModalState({ type: 'editCategory', category: c })}
-            onDeleteCategory={(c: Category) =>
-              setModalState({
-                type: 'confirmDelete',
-                message: 'Supprimer cette catégorie et tous ses sujets ?',
-                onConfirm: () => handleDeleteCategory(c),
-              })
-            }
-            canModify={canModify}
+            onAddCategory={openAddCategoryModal}
+            onEditCategory={openEditCategoryModal}
+            onDeleteCategory={openDeleteCategoryModal}
+            canModify={() => canManageCategory()}
           />
         );
       case 'subjects':
-        if (!selectedCategory) return <div>Catégorie non trouvée</div>;
+        if (!selectedCategory) return <div>Categorie non trouvee</div>;
         return (
           <SubjectsPage
             category={selectedCategory}
             onSelectSubject={(id: number) => navigate('confessions', selectedCategoryId, id)}
             onBack={handleBack}
-            onAddSubject={() => (user ? setModalState({ type: 'addTheme' }) : openLoginView())}
-            onEditSubject={(s: Theme) => setModalState({ type: 'editTheme', theme: s })}
-            onDeleteSubject={(s: Theme) =>
-              setModalState({
-                type: 'confirmDelete',
-                message: 'Supprimer ce sujet et toutes ses confessions ?',
-                onConfirm: () => handleDeleteTheme(s),
-              })
-            }
-            canModify={canModify}
+            onAddSubject={openAddThemeModal}
+            onEditSubject={openEditThemeModal}
+            onDeleteSubject={openDeleteThemeModal}
+            canModify={() => canManageTheme()}
           />
         );
       case 'confessions':
-        if (!selectedTheme) return <div>Sujet non trouvé</div>;
+        if (!selectedTheme) return <div>Sujet non trouve</div>;
         return (
           <ConfessionsPage
             subject={selectedTheme}
             onSelectConfession={(id: number) => navigate('confessionDetail', selectedCategoryId, selectedThemeId, id)}
             onBack={handleBack}
-            onAddConfession={() => (user ? setModalState({ type: 'addConfession' }) : openLoginView())}
-            onEditConfession={(c: Confession) => setModalState({ type: 'editConfession', confession: c })}
-            onDeleteConfession={(c: Confession) =>
-              setModalState({
-                type: 'confirmDelete',
-                message: 'Supprimer cette confession ?',
-                onConfirm: () => handleDeleteConfession(c),
-              })
-            }
-            canModify={canModify}
+            onAddConfession={openAddConfessionModal}
+            onEditConfession={openEditConfessionModal}
+            onDeleteConfession={openDeleteConfessionModal}
+            canModify={canModifyConfessionForUI}
           />
         );
       case 'confessionDetail':
-        if (!selectedConfession) return <div>Confession non trouvée</div>;
+        if (!selectedConfession) return <div>Confession non trouvee</div>;
         return (
           <ConfessionDetailPage
             confession={selectedConfession}
             onBack={handleBack}
-            onAddComment={() => (user ? setModalState({ type: 'addComment' }) : openLoginView())}
-            onEditComment={(c: Comment) => setModalState({ type: 'editComment', comment: c })}
-            onDeleteComment={(c: Comment) =>
-              setModalState({
-                type: 'confirmDelete',
-                message: 'Supprimer ce commentaire ?',
-                onConfirm: () => handleDeleteComment(c),
-              })
-            }
-            canModify={canModify}
+            onAddComment={openAddCommentModal}
+            onEditComment={openEditCommentModal}
+            onDeleteComment={openDeleteCommentModal}
+            canModify={canManageComment}
           />
         );
       case 'login':
@@ -435,7 +570,6 @@ const App: React.FC = () => {
         return <HomePage onStart={() => navigate('categories')} />;
     }
   };
-
   const handleLoginSuccess = (loggedInUser: User) => {
     handleLogin(loggedInUser);
     closeModal();
@@ -483,13 +617,15 @@ const App: React.FC = () => {
 
   return (
     <div className="bg-stone-50 min-h-screen font-sans">
-      <Header
-        onHomeClick={() => navigate('home')}
-        onCategoriesClick={() => navigate('categories')}
-        userId={user?.name || null}
-        onLogout={handleLogout}
-        onLogin={openLoginView}
-      />
+      {!isLoginView && (
+        <Header
+          onHomeClick={() => navigate('home')}
+          onCategoriesClick={() => navigate('categories')}
+          userId={user?.name || null}
+          onLogout={handleLogout}
+          onLogin={openLoginView}
+        />
+      )}
       <main className={mainClassName}>{renderContent()}</main>
       {!isLoginView && (
         <MobileNav
@@ -506,3 +642,4 @@ const App: React.FC = () => {
 };
 
 export default App;
+

@@ -152,8 +152,8 @@ const ConfessionsPage: React.FC<ConfessionsPageProps> = ({
         ))}
         {confessions.length === 0 && (
           <div className="md:col-span-2 lg:col-span-3 text-center py-20 bg-gray-50 rounded-lg">
-            <p className="text-gray-500 text-lg">🤫</p>
-            <p className="text-gray-500 mt-2">Soyez le premier à vous confesser sur ce sujet !</p>
+            <p className="text-gray-500 text-lg">{GRAPE_ICON}</p>
+            <p className="text-gray-500 mt-2">Soyez le premier a vous confesser sur ce sujet !</p>
           </div>
         )}
       </div>

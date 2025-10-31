@@ -45,6 +45,7 @@ export interface Theme {
   created_at: string;
   name: string;
   category: number; // FK to category table
+  user?: number;
   description?: string;
   number_of_confess: number;
   Active?: boolean;
@@ -57,6 +58,7 @@ export interface Category {
   id: number;
   created_at: string;
   name: string;
+  user?: number;
   theme_count?: number;
   // Addon fields
   _theme_of_category_2?: Theme[];

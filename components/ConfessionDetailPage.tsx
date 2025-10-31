@@ -142,7 +142,7 @@ const ConfessionDetailPage: React.FC<ConfessionDetailPageProps> = ({
           {comments.length === 0 && (
             <div className="text-center py-10 bg-white/50 rounded-lg">
               <p className="text-gray-500">Aucun commentaire pour le moment.</p>
-              <p className="text-gray-400 text-sm mt-1">Soyez le premier à réagir !</p>
+              <p className="text-gray-400 text-sm mt-1">Soyez le premier a reagir !</p>
             </div>
           )}
         </div>
