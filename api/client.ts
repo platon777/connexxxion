@@ -3,13 +3,15 @@
  * Handles authentication, token management, and HTTP requests
  */
 
+const FALLBACK_HOST = 'https://xjxu-zuqd-jod4.n7e.xano.io';
+
 const API_BASE_URLS = {
-  auth: import.meta.env.VITE_API_BASE_URL_AUTH || 'http://localhost:8080/api:oF6y6S5v',
-  category: import.meta.env.VITE_API_BASE_URL_CATEGORY || 'http://localhost:8080/api:R2I6TP0n',
-  comment: import.meta.env.VITE_API_BASE_URL_COMMENT || 'http://localhost:8080/api:kRM_7IxH',
-  confession: import.meta.env.VITE_API_BASE_URL_CONFESSION || 'http://localhost:8080/api:scRn_GVD',
-  theme: import.meta.env.VITE_API_BASE_URL_THEME || 'http://localhost:8080/api:0lgBJOXe',
-};
+  auth: import.meta.env.VITE_API_BASE_URL_AUTH || `${FALLBACK_HOST}/api:oF6y6S5v`,
+  category: import.meta.env.VITE_API_BASE_URL_CATEGORY || `${FALLBACK_HOST}/api:R2I6TP0n`,
+  comment: import.meta.env.VITE_API_BASE_URL_COMMENT || `${FALLBACK_HOST}/api:kRM_7IxH`,
+  confession: import.meta.env.VITE_API_BASE_URL_CONFESSION || `${FALLBACK_HOST}/api:scRn_GVD`,
+  theme: import.meta.env.VITE_API_BASE_URL_THEME || `${FALLBACK_HOST}/api:0lgBJOXe`,
+} as const;
 
 const AUTH_TOKEN_KEY = 'connexxion_auth_token';
 const USER_DATA_KEY = 'connexxion_user_data';
