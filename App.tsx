@@ -6,6 +6,7 @@ import {
   confessionService,
   commentService,
   authService,
+  likeService,
 } from './api';
 
 import Header from './components/Header';
@@ -38,15 +39,20 @@ const App: React.FC = () => {
     loadCategories();
   }, []);
 
-  const loadCategories = async () => {
-    setLoading(true);
+  const loadCategories = async (options: { silent?: boolean } = {}) => {
+    const { silent = false } = options;
+    if (!silent) {
+      setLoading(true);
+    }
     try {
       const data = await categoryService.getCategories();
       setCategories(data);
     } catch (error) {
       console.error('Failed to load categories:', error);
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   };
 
@@ -60,6 +66,71 @@ const App: React.FC = () => {
     } catch (error) {
       console.error(`Failed to load comments for confession ${confessionId}:`, error);
     }
+  };
+
+  const updateConfessionInState = (confessionId: number, updater: (confession: Confession) => Confession) => {
+    setCategories((prevCategories) =>
+      prevCategories.map((category) => {
+        if (!Array.isArray(category._theme_of_category_2)) {
+          return category;
+        }
+
+        let categoryChanged = false;
+        const updatedThemes = category._theme_of_category_2.map((theme) => {
+          if (!Array.isArray(theme._confession)) {
+            return theme;
+          }
+
+          let themeChanged = false;
+          const updatedConfessions = theme._confession.map((confession) => {
+            if (confession.id !== confessionId) {
+              return confession;
+            }
+            themeChanged = true;
+            categoryChanged = true;
+            return updater(confession);
+          });
+
+          return themeChanged ? { ...theme, _confession: updatedConfessions } : theme;
+        });
+
+        return categoryChanged ? { ...category, _theme_of_category_2: updatedThemes } : category;
+      })
+    );
+  };
+
+  const updateCommentInState = (
+    confessionId: number,
+    commentId: number,
+    updater: (comment: Comment) => Comment
+  ) => {
+    updateConfessionInState(confessionId, (confession) => {
+      if (!Array.isArray(confession._comment_of_confession)) {
+        return confession;
+      }
+
+      const updatedComments = confession._comment_of_confession.map((comment) => {
+        if (comment.id !== commentId) {
+          return comment;
+        }
+        return updater(comment);
+      });
+
+      return {
+        ...confession,
+        _comment_of_confession: updatedComments,
+      };
+    });
+
+    setConfessionComments((prev) => {
+      const current = prev[confessionId];
+      if (!current) {
+        return prev;
+      }
+
+      const updated = current.map((comment) => (comment.id === commentId ? updater(comment) : comment));
+      return { ...prev, [confessionId]: updated };
+    });
   };
 
   // --- Data Access Helpers ---
@@ -109,7 +180,7 @@ const App: React.FC = () => {
     setView('login');
   };
 
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.role?.toLowerCase() === 'admin';
 
   const requireAdmin = () => {
     if (!user) {
@@ -476,6 +547,53 @@ const App: React.FC = () => {
     }
   };
 
+  const handleToggleConfessionLike = async (confession: Confession) => {
+    try {
+      const { isLiked } = await likeService.toggleConfessionLike(confession.id);
+      const diff = isLiked ? 1 : -1;
+
+      updateConfessionInState(confession.id, (current) => {
+        const currentCount = current.real_like_count ?? current.like_count ?? 0;
+        const nextCount = Math.max(0, currentCount + diff);
+
+        return {
+          ...current,
+          real_like_count: nextCount,
+          like_count: nextCount,
+          _is_liked: isLiked,
+        };
+      });
+    } catch (error) {
+      console.error('Failed to toggle confession like:', error);
+      alert('Erreur lors de la mise a jour du like de la confession');
+    }
+  };
+
+  const handleToggleCommentLike = async (comment: Comment) => {
+    try {
+      const { isLiked } = await likeService.toggleCommentLike(comment.id);
+      const diff = isLiked ? 1 : -1;
+      const confessionId = comment.confession ?? selectedConfessionId;
+      if (!confessionId) {
+        return;
+      }
+
+      updateCommentInState(confessionId, comment.id, (current) => {
+        const currentCount = current.like_count ?? 0;
+        const nextCount = Math.max(0, currentCount + diff);
+
+        return {
+          ...current,
+          like_count: nextCount,
+          _is_liked: isLiked,
+        };
+      });
+    } catch (error) {
+      console.error('Failed to toggle comment like:', error);
+      alert('Erreur lors de la mise a jour du like du commentaire');
+    }
+  };
+
   const handleMobileAdd = () => {
     if (!user) {
       openLoginView();
@@ -549,6 +667,7 @@ const App: React.FC = () => {
             onAddConfession={openAddConfessionModal}
             onEditConfession={openEditConfessionModal}
             onDeleteConfession={openDeleteConfessionModal}
+            onToggleConfessionLike={handleToggleConfessionLike}
             canModify={canModifyConfessionForUI}
           />
         );
@@ -561,6 +680,8 @@ const App: React.FC = () => {
             onAddComment={openAddCommentModal}
             onEditComment={openEditCommentModal}
             onDeleteComment={openDeleteCommentModal}
+            onToggleConfessionLike={handleToggleConfessionLike}
+            onToggleCommentLike={handleToggleCommentLike}
             canModify={canManageComment}
           />
         );

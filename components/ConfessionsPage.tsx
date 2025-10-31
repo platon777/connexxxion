@@ -2,8 +2,8 @@ import React from 'react';
 import type { Subject, Confession } from '../types';
 import ItemMenu from './ItemMenu';
 
-const PEACH_ICON = String.fromCodePoint(0x1F351);
-const GRAPE_ICON = String.fromCodePoint(0x1F347);
+const PEACH_ICON = String.fromCodePoint(0x1f351);
+const GRAPE_ICON = String.fromCodePoint(0x1f347);
 
 interface ConfessionsPageProps {
   subject: Subject;
@@ -12,6 +12,7 @@ interface ConfessionsPageProps {
   onAddConfession: () => void;
   onEditConfession: (confession: Confession) => void;
   onDeleteConfession: (confession: Confession) => void;
+  onToggleConfessionLike: (confession: Confession) => void;
   canModify: (item: any) => boolean;
 }
 
@@ -20,8 +21,9 @@ const ConfessionCard: React.FC<{
   onClick: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onToggleLike: () => void;
   canModify: boolean;
-}> = ({ confession, onClick, onEdit, onDelete, canModify }) => {
+}> = ({ confession, onClick, onEdit, onDelete, onToggleLike, canModify }) => {
   const rawComments = confession._comment_of_confession;
   const commentsCount = (() => {
     if (Array.isArray(rawComments)) {
@@ -48,12 +50,18 @@ const ConfessionCard: React.FC<{
 
   const likeCount = confession.real_like_count ?? confession.like_count ?? 0;
   const viewCount = confession.view_count ?? 0;
+  const isLiked = Boolean(confession._is_liked);
   const authorName = confession._user_object?.name || 'Anonyme';
   const formattedDate = new Date(confession.created_at).toLocaleDateString('fr-FR', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
   });
+
+  const handleLikeClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    onToggleLike();
+  };
 
   return (
     <div className="relative bg-white p-6 rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-300 flex flex-col h-full border border-gray-200 hover:border-yellow-300">
@@ -77,10 +85,15 @@ const ConfessionCard: React.FC<{
         </p>
       </div>
       <div className="flex items-center justify-end space-x-4 mt-6 pt-4 border-t border-gray-100">
-        <div className="flex items-center space-x-1 text-gray-500">
+        <button
+          type="button"
+          onClick={handleLikeClick}
+          className={`flex items-center space-x-1 text-gray-500 transition-transform duration-200 hover:scale-105 ${isLiked ? 'text-yellow-500' : ''}`}
+          aria-label="Aimer cette confession"
+        >
           <span className="text-lg">{PEACH_ICON}</span>
           <span>{likeCount}</span>
-        </div>
+        </button>
         <div className="flex items-center space-x-1 text-gray-500">
           <span className="text-lg">{GRAPE_ICON}</span>
           <span>{commentsCount}</span>
@@ -108,6 +121,7 @@ const ConfessionsPage: React.FC<ConfessionsPageProps> = ({
   onAddConfession,
   onEditConfession,
   onDeleteConfession,
+  onToggleConfessionLike,
   canModify,
 }) => {
   const confessions = Array.isArray(subject._confession) ? subject._confession : [];
@@ -147,6 +161,7 @@ const ConfessionsPage: React.FC<ConfessionsPageProps> = ({
             onClick={() => onSelectConfession(confession.id)}
             onEdit={() => onEditConfession(confession)}
             onDelete={() => onDeleteConfession(confession)}
+            onToggleLike={() => onToggleConfessionLike(confession)}
             canModify={canModify(confession)}
           />
         ))}

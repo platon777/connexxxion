@@ -3,6 +3,7 @@
  */
 
 import { apiClient } from './client';
+import { getDeviceId } from './utils';
 import type { Comment } from '../types';
 import type { User } from '../types';
 
@@ -11,6 +12,7 @@ interface CommentByConfessResponse {
     Comment & {
       _user_object2?: User;
       _number_like_comment?: number;
+      _is_liked_comment?: boolean;
     }
   >;
 }
@@ -35,14 +37,16 @@ export const getComment = async (id: number): Promise<Comment> => {
 export const getCommentsByConfession = async (confessionId: number): Promise<Comment[]> => {
   const response = await apiClient.get<CommentByConfessResponse>('comment', '/comment_by_confess', {
     confession_id: confessionId,
+    device_id: getDeviceId(),
   });
 
   const items = response?.result1 ?? [];
 
-  return items.map(({ _number_like_comment, _user_object2, ...rest }) => ({
+  return items.map(({ _number_like_comment, _user_object2, _is_liked_comment, ...rest }) => ({
     ...rest,
     like_count: _number_like_comment ?? rest.like_count ?? 0,
     _user_object: _user_object2 ?? rest._user_object,
+    _is_liked: typeof _is_liked_comment === 'boolean' ? _is_liked_comment : rest._is_liked,
   }));
 };
 

@@ -4,7 +4,6 @@
 
 import { apiClient } from './client';
 import { getDeviceId } from './utils';
-import type { ConfessionLike, CommentLike } from '../types';
 
 /**
  * Toggle confession like (like/unlike)
@@ -13,7 +12,7 @@ import type { ConfessionLike, CommentLike } from '../types';
 export const toggleConfessionLike = async (confessionId: number): Promise<{ isLiked: boolean }> => {
   const deviceId = getDeviceId();
 
-  const response = await apiClient.post<any>('/confession_like', {
+  const response = await apiClient.post<any>('confession', '/confession_like', {
     confession: confessionId,
     device_id: deviceId,
   });
@@ -31,7 +30,7 @@ export const toggleConfessionLike = async (confessionId: number): Promise<{ isLi
 export const toggleCommentLike = async (commentId: number): Promise<{ isLiked: boolean }> => {
   const deviceId = getDeviceId();
 
-  const response = await apiClient.post<any>('/comment_like', {
+  const response = await apiClient.post<any>('comment', '/comment_like', {
     comment: commentId,
     device_id: deviceId,
   });
@@ -40,36 +39,4 @@ export const toggleCommentLike = async (commentId: number): Promise<{ isLiked: b
   const isLiked = response.value !== 'removed!!!!!';
 
   return { isLiked };
-};
-
-/**
- * Get all confession likes
- */
-export const getConfessionLikes = async (): Promise<ConfessionLike[]> => {
-  return apiClient.get<ConfessionLike[]>('/confession_like');
-};
-
-/**
- * Get all comment likes
- */
-export const getCommentLikes = async (): Promise<CommentLike[]> => {
-  return apiClient.get<CommentLike[]>('/comment_like');
-};
-
-/**
- * Check if user has liked a confession
- */
-export const hasLikedConfession = async (confessionId: number): Promise<boolean> => {
-  const deviceId = getDeviceId();
-  const likes = await getConfessionLikes();
-  return likes.some(like => like.confession === confessionId && like.device_id === deviceId);
-};
-
-/**
- * Check if user has liked a comment
- */
-export const hasLikedComment = async (commentId: number): Promise<boolean> => {
-  const deviceId = getDeviceId();
-  const likes = await getCommentLikes();
-  return likes.some(like => like.comment === commentId && like.device_id === deviceId);
 };

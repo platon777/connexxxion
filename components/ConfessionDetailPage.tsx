@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import type { Confession, Comment } from '../types';
 import ItemMenu from './ItemMenu';
 
-const PEACH_ICON = String.fromCodePoint(0x1F351);
-const GRAPE_ICON = String.fromCodePoint(0x1F347);
+const PEACH_ICON = String.fromCodePoint(0x1f351);
+const GRAPE_ICON = String.fromCodePoint(0x1f347);
 const COMMENTS_PER_PAGE = 10;
 
 interface ConfessionDetailPageProps {
@@ -12,6 +12,8 @@ interface ConfessionDetailPageProps {
   onAddComment: () => void;
   onEditComment: (comment: Comment) => void;
   onDeleteComment: (comment: Comment) => void;
+  onToggleConfessionLike: (confession: Confession) => void;
+  onToggleCommentLike: (comment: Comment) => void;
   canModify: (item: any) => boolean;
 }
 
@@ -19,14 +21,17 @@ const CommentCard: React.FC<{
   comment: Comment;
   onEdit: () => void;
   onDelete: () => void;
+  onToggleLike: () => void;
   canModify: boolean;
-}> = ({ comment, onEdit, onDelete, canModify }) => {
+}> = ({ comment, onEdit, onDelete, onToggleLike, canModify }) => {
   const authorName = comment._user_object?.name || 'Anonyme';
   const formattedDate = new Date(comment.created_at).toLocaleDateString('fr-FR', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
   });
+  const isLiked = Boolean(comment._is_liked);
+  const likeCount = comment.like_count ?? 0;
 
   return (
     <div className="relative bg-white p-4 rounded-lg border border-gray-200">
@@ -44,9 +49,14 @@ const CommentCard: React.FC<{
           </div>
           <p className="text-gray-600 mt-1">{comment.content}</p>
           <div className="flex items-center space-x-2 mt-3">
-            <button className="group flex items-center space-x-1 text-gray-500 transition-transform duration-200 hover:scale-105">
+            <button
+              type="button"
+              onClick={onToggleLike}
+              className={`group flex items-center space-x-1 text-gray-500 transition-transform duration-200 hover:scale-105 ${isLiked ? 'text-yellow-500' : ''}`}
+              aria-label="Aimer ce commentaire"
+            >
               <span className="text-lg transition-transform duration-200 group-hover:scale-125">{PEACH_ICON}</span>
-              <span className="text-sm font-medium">{comment.like_count || 0}</span>
+              <span className="text-sm font-medium">{likeCount}</span>
             </button>
           </div>
         </div>
@@ -61,6 +71,8 @@ const ConfessionDetailPage: React.FC<ConfessionDetailPageProps> = ({
   onAddComment,
   onEditComment,
   onDeleteComment,
+  onToggleConfessionLike,
+  onToggleCommentLike,
   canModify,
 }) => {
   const [visibleCommentsCount, setVisibleCommentsCount] = useState(COMMENTS_PER_PAGE);
@@ -74,6 +86,7 @@ const ConfessionDetailPage: React.FC<ConfessionDetailPageProps> = ({
     year: 'numeric',
   });
   const likeCount = confession.real_like_count ?? confession.like_count ?? 0;
+  const isConfessionLiked = Boolean(confession._is_liked);
 
   const handleLoadMore = () => {
     setVisibleCommentsCount((prev) => prev + COMMENTS_PER_PAGE);
@@ -105,10 +118,15 @@ const ConfessionDetailPage: React.FC<ConfessionDetailPageProps> = ({
         </div>
         <p className="text-gray-700 text-lg leading-relaxed whitespace-pre-wrap">{confession.content}</p>
         <div className="flex items-center justify-end space-x-6 mt-8 pt-6 border-t border-gray-100">
-          <div className="flex items-center space-x-2 text-gray-500">
+          <button
+            type="button"
+            onClick={() => onToggleConfessionLike(confession)}
+            className={`flex items-center space-x-2 text-gray-500 transition-transform duration-200 hover:scale-105 ${isConfessionLiked ? 'text-yellow-500' : ''}`}
+            aria-label="Aimer cette confession"
+          >
             <span className="text-2xl">{PEACH_ICON}</span>
             <span className="font-bold">{likeCount}</span>
-          </div>
+          </button>
           <div className="flex items-center space-x-2 text-gray-500">
             <span className="text-2xl">{GRAPE_ICON}</span>
             <span className="font-bold">{comments.length}</span>
@@ -136,6 +154,7 @@ const ConfessionDetailPage: React.FC<ConfessionDetailPageProps> = ({
               comment={comment}
               onEdit={() => onEditComment(comment)}
               onDelete={() => onDeleteComment(comment)}
+              onToggleLike={() => onToggleCommentLike(comment)}
               canModify={canModify(comment)}
             />
           ))}
