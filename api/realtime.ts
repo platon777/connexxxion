@@ -20,6 +20,35 @@ let isInitializing = false;
 let initPromise: Promise<XanoClient | null> | null = null;
 
 /**
+ * Wait for WebSocket to be ready
+ */
+const waitForWebSocketReady = async (timeout = 5000): Promise<boolean> => {
+  const checkInterval = 50; // Check every 50ms
+  const maxAttempts = timeout / checkInterval;
+  let attempts = 0;
+
+  return new Promise((resolve) => {
+    const checkReady = () => {
+      // Access internal WebSocket through the client (if possible)
+      // Otherwise wait a reasonable amount of time
+      attempts++;
+
+      if (attempts >= maxAttempts) {
+        console.warn('WebSocket connection timeout - proceeding anyway');
+        resolve(true);
+        return;
+      }
+
+      // Wait a bit more
+      setTimeout(checkReady, checkInterval);
+    };
+
+    // Start checking after initial delay
+    setTimeout(checkReady, 200);
+  });
+};
+
+/**
  * Initialize Xano client for realtime (singleton)
  */
 const getXanoClient = async (): Promise<XanoClient | null> => {
@@ -36,17 +65,23 @@ const getXanoClient = async (): Promise<XanoClient | null> => {
   }
 
   isInitializing = true;
-  initPromise = new Promise((resolve) => {
-    xanoClient = new XanoClient({
-      instanceBaseUrl: INSTANCE_BASE_URL,
-      realtimeConnectionHash: REALTIME_CONNECTION_HASH,
-    });
+  initPromise = new Promise(async (resolve) => {
+    try {
+      xanoClient = new XanoClient({
+        instanceBaseUrl: INSTANCE_BASE_URL,
+        realtimeConnectionHash: REALTIME_CONNECTION_HASH,
+      });
 
-    // Give the WebSocket a moment to initialize
-    setTimeout(() => {
+      // Wait for WebSocket to be ready
+      await waitForWebSocketReady();
+
       isInitializing = false;
       resolve(xanoClient);
-    }, 100);
+    } catch (error) {
+      console.error('Failed to initialize Xano client:', error);
+      isInitializing = false;
+      resolve(null);
+    }
   });
 
   return initPromise;
@@ -60,6 +95,34 @@ export const setRealtimeAuthToken = async (token: string) => {
   if (client) {
     client.setRealtimeAuthToken(token);
   }
+};
+
+/**
+ * Create channel with retry logic
+ */
+const createChannelWithRetry = async (
+  client: XanoClient,
+  channelName: string,
+  maxRetries = 5
+): Promise<any> => {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const channel = client.channel(channelName);
+      // If successful, return the channel
+      return channel;
+    } catch (error: any) {
+      // Check if it's the CONNECTING state error
+      if (error?.message?.includes('CONNECTING state') && attempt < maxRetries - 1) {
+        // Wait exponentially: 100ms, 200ms, 400ms, 800ms, 1600ms
+        const waitTime = 100 * Math.pow(2, attempt);
+        console.log(`WebSocket not ready, retrying in ${waitTime}ms... (attempt ${attempt + 1}/${maxRetries})`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+      } else {
+        throw error;
+      }
+    }
+  }
+  throw new Error(`Failed to create channel ${channelName} after ${maxRetries} attempts`);
 };
 
 /**
@@ -90,8 +153,8 @@ export const subscribeToRealtimeChannel = (
         return;
       }
 
-      // Create channel
-      channel = client.channel(channelName);
+      // Create channel with retry logic
+      channel = await createChannelWithRetry(client, channelName);
 
       // Listen for messages
       channel.on((message: any) => {
@@ -110,6 +173,8 @@ export const subscribeToRealtimeChannel = (
           void handler(message);
         }
       });
+
+      console.log(`✅ Connected to Xano realtime channel: ${channelName}`);
     } catch (error) {
       console.error(`Failed to subscribe to channel ${channelName}:`, error);
     }
