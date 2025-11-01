@@ -158,18 +158,25 @@ export const subscribeToRealtimeChannel = (
 
       // Listen for messages
       channel.on((message: any) => {
+        console.log(`📨 Received message on channel ${channelName}:`, message);
+
         // Xano sends messages with action and payload structure
         if (message && typeof message === 'object') {
           const msgObj = message as { action?: string; payload?: unknown };
 
+          console.log(`   Action: ${msgObj.action}, Payload:`, msgObj.payload);
+
           // Handle broadcast messages
           if (msgObj.action === 'message' || msgObj.action === 'broadcast') {
+            console.log(`   🔄 Triggering handler for ${channelName}`);
             void handler(msgObj.payload);
           } else {
             // For other message types, pass the whole message
+            console.log(`   🔄 Triggering handler with full message for ${channelName}`);
             void handler(message);
           }
         } else {
+          console.log(`   🔄 Triggering handler with raw message for ${channelName}`);
           void handler(message);
         }
       });
