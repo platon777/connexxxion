@@ -15,24 +15,48 @@ const REALTIME_CONNECTION_HASH = 'tKi3HqCgJSGS8TLdG9EMHmEuGMQ';
 
 let xanoClient: XanoClient | null = null;
 
+// Track if client is being initialized
+let isInitializing = false;
+let initPromise: Promise<XanoClient | null> | null = null;
+
 /**
  * Initialize Xano client for realtime (singleton)
  */
-const getXanoClient = () => {
-  if (!xanoClient && REALTIME_CONNECTION_HASH) {
+const getXanoClient = async (): Promise<XanoClient | null> => {
+  if (xanoClient) {
+    return xanoClient;
+  }
+
+  if (isInitializing && initPromise) {
+    return initPromise;
+  }
+
+  if (!REALTIME_CONNECTION_HASH) {
+    return null;
+  }
+
+  isInitializing = true;
+  initPromise = new Promise((resolve) => {
     xanoClient = new XanoClient({
       instanceBaseUrl: INSTANCE_BASE_URL,
       realtimeConnectionHash: REALTIME_CONNECTION_HASH,
     });
-  }
-  return xanoClient;
+
+    // Give the WebSocket a moment to initialize
+    setTimeout(() => {
+      isInitializing = false;
+      resolve(xanoClient);
+    }, 100);
+  });
+
+  return initPromise;
 };
 
 /**
  * Set auth token for realtime connection
  */
-export const setRealtimeAuthToken = (token: string) => {
-  const client = getXanoClient();
+export const setRealtimeAuthToken = async (token: string) => {
+  const client = await getXanoClient();
   if (client) {
     client.setRealtimeAuthToken(token);
   }
@@ -55,32 +79,41 @@ export const subscribeToRealtimeChannel = (
     return () => {};
   }
 
-  const client = getXanoClient();
-  if (!client) {
-    console.error('Failed to initialize Xano client');
-    return () => {};
-  }
+  let channel: any = null;
 
-  // Create channel
-  const channel = client.channel(channelName);
-
-  // Listen for messages
-  channel.on((message) => {
-    // Xano sends messages with action and payload structure
-    if (message && typeof message === 'object') {
-      const msgObj = message as { action?: string; payload?: unknown };
-
-      // Handle broadcast messages
-      if (msgObj.action === 'message' || msgObj.action === 'broadcast') {
-        void handler(msgObj.payload);
-      } else {
-        // For other message types, pass the whole message
-        void handler(message);
+  // Initialize client and channel asynchronously
+  void (async () => {
+    try {
+      const client = await getXanoClient();
+      if (!client) {
+        console.error('Failed to initialize Xano client');
+        return;
       }
-    } else {
-      void handler(message);
+
+      // Create channel
+      channel = client.channel(channelName);
+
+      // Listen for messages
+      channel.on((message: any) => {
+        // Xano sends messages with action and payload structure
+        if (message && typeof message === 'object') {
+          const msgObj = message as { action?: string; payload?: unknown };
+
+          // Handle broadcast messages
+          if (msgObj.action === 'message' || msgObj.action === 'broadcast') {
+            void handler(msgObj.payload);
+          } else {
+            // For other message types, pass the whole message
+            void handler(message);
+          }
+        } else {
+          void handler(message);
+        }
+      });
+    } catch (error) {
+      console.error(`Failed to subscribe to channel ${channelName}:`, error);
     }
-  });
+  })();
 
   // Return cleanup function
   return () => {
