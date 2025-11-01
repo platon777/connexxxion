@@ -17,3 +17,4 @@ export * as themeService from './themes';
 export * as confessionService from './confessions';
 export * as commentService from './comments';
 export * as likeService from './likes';
+export * from './realtime';

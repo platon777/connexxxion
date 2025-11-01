@@ -7,6 +7,7 @@ interface ImportMetaEnv {
   readonly VITE_API_BASE_URL_CONFESSION: string
   readonly VITE_API_BASE_URL_THEME: string
   readonly VITE_IP_ENDPOINT?: string
+  readonly VITE_REALTIME_BASE_URL?: string
 }
 
 interface ImportMeta {

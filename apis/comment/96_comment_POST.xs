@@ -27,7 +27,7 @@ query comment verb=POST {
     // Broadcast the new comment to the single existing channel in the workspace.
     // IMPORTANT: Replace "your_single_channel_name" with the actual name of your channel.
     api.realtime_event {
-      channel = "confessions"
+      channel = "comment"
       data = $model
       auth_table = "user"
       auth_id = $input.user

@@ -8,6 +8,7 @@ import {
   authService,
   likeService,
   getDeviceId,
+  subscribeToRealtimeChannel,
 } from './api';
 
 import Header from './components/Header';
@@ -45,6 +46,36 @@ const App: React.FC = () => {
       }
     })();
     loadCategories();
+  }, []);
+
+  useEffect(() => {
+    const unsubscribeConfessions = subscribeToRealtimeChannel('confessions', async () => {
+      await loadCategories({ silent: true });
+    });
+
+    const unsubscribeComments = subscribeToRealtimeChannel('comment', async (payload) => {
+      const data = payload as Record<string, unknown> | null;
+      const confessionIdRaw = data?.confession ?? (data as any)?.confession_id;
+      const confessionId =
+        typeof confessionIdRaw === 'number'
+          ? confessionIdRaw
+          : typeof confessionIdRaw === 'string'
+          ? parseInt(confessionIdRaw, 10)
+          : null;
+
+      if (confessionId) {
+        await loadConfessionDetail(confessionId);
+        await loadConfessionComments(confessionId);
+      } else {
+        await loadCategories({ silent: true });
+      }
+    });
+
+    return () => {
+      unsubscribeConfessions();
+      unsubscribeComments();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadCategories = async (options: { silent?: boolean } = {}) => {

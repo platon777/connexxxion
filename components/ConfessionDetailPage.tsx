@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import type { Confession, Comment } from '../types';
 import ItemMenu from './ItemMenu';
 
@@ -91,7 +91,14 @@ const ConfessionDetailPage: React.FC<ConfessionDetailPageProps> = ({
   const [visibleCommentsCount, setVisibleCommentsCount] = useState(COMMENTS_PER_PAGE);
 
   const comments = Array.isArray(confession._comment_of_confession) ? confession._comment_of_confession : [];
-  const commentsToShow = comments.slice(0, visibleCommentsCount);
+  const sortedComments = useMemo(() => {
+    return [...comments].sort((a, b) => {
+      const dateA = new Date(a.created_at).getTime();
+      const dateB = new Date(b.created_at).getTime();
+      return dateB - dateA;
+    });
+  }, [comments]);
+  const commentsToShow = sortedComments.slice(0, visibleCommentsCount);
   const confessionGenderIcon = getGenderIcon(confession._user_object?.sex ?? (confession._user_object as any)?.sexe);
   const formattedDate = new Date(confession.created_at).toLocaleDateString('fr-FR', {
     day: 'numeric',

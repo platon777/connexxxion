@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import type { Subject, Confession } from '../types';
 import ItemMenu from './ItemMenu';
 
@@ -6,6 +6,7 @@ const PEACH_ICON = String.fromCodePoint(0x1f351);
 const GRAPE_ICON = String.fromCodePoint(0x1f347);
 const BOY_ICON = String.fromCodePoint(0x1f466);
 const GIRL_ICON = String.fromCodePoint(0x1f467);
+const CONFESSIONS_PER_PAGE = 10;
 
 const getGenderIcon = (sex?: number | string): string => {
   const normalized = typeof sex === 'string' ? parseInt(sex, 10) : sex;
@@ -136,7 +137,27 @@ const ConfessionsPage: React.FC<ConfessionsPageProps> = ({
   canModify,
 }) => {
   const confessions = Array.isArray(subject._confession) ? subject._confession : [];
-  const confessionsCount = confessions.length;
+  const [visibleCount, setVisibleCount] = useState(CONFESSIONS_PER_PAGE);
+  const subjectId = subject?.id ?? 0;
+
+  useEffect(() => {
+    setVisibleCount(CONFESSIONS_PER_PAGE);
+  }, [subjectId]);
+
+  const sortedConfessions = useMemo(() => {
+    return [...confessions].sort((a, b) => {
+      const dateA = new Date(a.created_at).getTime();
+      const dateB = new Date(b.created_at).getTime();
+      return dateB - dateA;
+    });
+  }, [confessions]);
+
+  const displayedConfessions = useMemo(
+    () => sortedConfessions.slice(0, visibleCount),
+    [sortedConfessions, visibleCount]
+  );
+
+  const confessionsCount = sortedConfessions.length;
 
   return (
     <div>
@@ -165,7 +186,7 @@ const ConfessionsPage: React.FC<ConfessionsPageProps> = ({
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {confessions.map((confession) => (
+        {displayedConfessions.map((confession) => (
           <ConfessionCard
             key={confession.id}
             confession={confession}
@@ -176,13 +197,24 @@ const ConfessionsPage: React.FC<ConfessionsPageProps> = ({
             canModify={canModify(confession)}
           />
         ))}
-        {confessions.length === 0 && (
+        {confessionsCount === 0 && (
           <div className="md:col-span-2 lg:col-span-3 text-center py-20 bg-gray-50 rounded-lg">
             <p className="text-gray-500 text-lg">{GRAPE_ICON}</p>
             <p className="text-gray-500 mt-2">Soyez le premier a vous confesser sur ce sujet !</p>
           </div>
         )}
       </div>
+
+      {visibleCount < confessionsCount && (
+        <div className="mt-8 text-center">
+          <button
+            onClick={() => setVisibleCount((prev) => prev + CONFESSIONS_PER_PAGE)}
+            className="px-6 py-3 bg-white text-gray-700 font-semibold rounded-full hover:bg-gray-50 border border-gray-200 transition-all duration-300"
+          >
+            Charger plus de confessions
+          </button>
+        </div>
+      )}
     </div>
   );
 };
