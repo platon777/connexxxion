@@ -4,12 +4,14 @@ import logoImg from '../assets/logo.jpg';
 interface HeaderProps {
   onHomeClick: () => void;
   onCategoriesClick: () => void;
+  onMemosClick?: () => void;
   userId: string | null;
+  isAdmin?: boolean;
   onLogout: () => void;
   onLogin: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onHomeClick, onCategoriesClick, userId, onLogout, onLogin }) => {
+const Header: React.FC<HeaderProps> = ({ onHomeClick, onCategoriesClick, onMemosClick, userId, isAdmin, onLogout, onLogin }) => {
   return (
     <header className="bg-white/80 backdrop-blur-lg sticky top-0 z-40 shadow-sm border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -24,6 +26,14 @@ const Header: React.FC<HeaderProps> = ({ onHomeClick, onCategoriesClick, userId,
             <button onClick={onCategoriesClick} className="font-semibold text-gray-500 hover:text-gray-900 transition-colors">
               Categories
             </button>
+            {isAdmin && onMemosClick && (
+              <button onClick={onMemosClick} className="font-semibold text-yellow-600 hover:text-yellow-700 transition-colors flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                </svg>
+                Messages
+              </button>
+            )}
           </nav>
           <div className="flex items-center">
             {userId ? (

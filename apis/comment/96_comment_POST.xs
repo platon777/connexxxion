@@ -29,7 +29,7 @@ query comment verb=POST {
     api.realtime_event {
       channel = "comment"
       data = $model
-      auth_table = "user"
+      auth_table = "0"
       auth_id = $input.user
     }
   

@@ -28,7 +28,7 @@ query confession verb=POST {
     api.realtime_event {
       channel = "confessions"
       data = $model
-      auth_table = "user"
+      auth_table = "0"
       auth_id = $input.user
     }
   

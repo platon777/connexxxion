@@ -89,6 +89,16 @@ export interface ConfessionView {
   device_id: string;
 }
 
+export interface Memo {
+  id: number;
+  created_at: string;
+  user_name?: string;
+  description: string;
+  user?: number;
+  // Addon fields
+  _user_object?: User;
+}
+
 // ============================================
 // Authentication Types
 // ============================================
@@ -114,7 +124,7 @@ export interface SignupRequest {
 // Frontend UI Types
 // ============================================
 
-export type View = 'home' | 'categories' | 'subjects' | 'confessions' | 'confessionDetail' | 'login' | 'donations';
+export type View = 'home' | 'categories' | 'subjects' | 'confessions' | 'confessionDetail' | 'login' | 'donations' | 'memos';
 
 export type ModalState =
   | null

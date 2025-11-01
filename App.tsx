@@ -7,6 +7,7 @@ import {
   commentService,
   authService,
   likeService,
+  memoService,
   getDeviceId,
   subscribeToRealtimeChannel,
 } from './api';
@@ -19,6 +20,7 @@ import ConfessionsPage from './components/ConfessionsPage';
 import ConfessionDetailPage from './components/ConfessionDetailPage';
 import LoginPage from './components/LoginPage';
 import DonationsPage from './components/DonationsPage';
+import MemosPage from './components/MemosPage';
 import DonationButton from './components/DonationButton';
 import MobileNav from './components/MobileNav';
 import AddCategoryForm from './components/AddCategoryForm';
@@ -499,6 +501,42 @@ const App: React.FC = () => {
     navigate(fallbackView);
   };
 
+  // --- Memo Operations ---
+  const handleCreateMemo = async (data: { user_name?: string; description: string }) => {
+    try {
+      await memoService.createMemo({
+        user_name: data.user_name,
+        description: data.description,
+        user: user?.id,
+      });
+    } catch (error) {
+      console.error('Failed to create memo:', error);
+      throw error;
+    }
+  };
+
+  const handleLoadMemos = async () => {
+    try {
+      return await memoService.getMemos();
+    } catch (error) {
+      console.error('Failed to load memos:', error);
+      throw error;
+    }
+  };
+
+  const handleDeleteMemo = async (id: number) => {
+    if (!isAdmin) {
+      alert('Seul un administrateur peut supprimer les memos.');
+      return;
+    }
+    try {
+      await memoService.deleteMemo(id);
+    } catch (error) {
+      console.error('Failed to delete memo:', error);
+      throw error;
+    }
+  };
+
   // --- CRUD Operations ---
   const closeModal = () => setModalState(null);
 
@@ -826,7 +864,9 @@ const App: React.FC = () => {
       case 'login':
         return <LoginPage onLogin={handleLoginSuccess} />;
       case 'donations':
-        return <DonationsPage onBack={handleDonationBack} />;
+        return <DonationsPage onBack={handleDonationBack} onMemoSubmit={handleCreateMemo} />;
+      case 'memos':
+        return <MemosPage onBack={() => navigate('home')} onLoadMemos={handleLoadMemos} onDeleteMemo={handleDeleteMemo} />;
       default:
         return <HomePage onStart={() => navigate('categories')} />;
     }
@@ -882,7 +922,9 @@ const App: React.FC = () => {
         <Header
           onHomeClick={() => navigate('home')}
           onCategoriesClick={() => navigate('categories')}
+          onMemosClick={isAdmin ? () => navigate('memos') : undefined}
           userId={user?.name || null}
+          isAdmin={isAdmin}
           onLogout={handleLogout}
           onLogin={openLoginView}
         />
@@ -893,11 +935,13 @@ const App: React.FC = () => {
           currentView={view}
           onHomeClick={() => navigate('home')}
           onCategoriesClick={() => navigate('categories')}
+          onMemosClick={isAdmin ? () => navigate('memos') : undefined}
           onAddClick={handleMobileAdd}
           showAddButton={showMobileAddButton}
+          showMemosButton={isAdmin}
         />
       )}
-      {!isLoginView && view !== 'donations' && (
+      {!isLoginView && view !== 'home' && view !== 'donations' && view !== 'memos' && (
         <DonationButton onClick={openDonations} />
       )}
       {!isLoginView && renderModal()}
