@@ -30,8 +30,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       return;
     }
 
-    if (mode === 'signup' && (!name.trim() || !email.trim())) {
-      setError('Le nom et l email sont requis.');
+    if (mode === 'signup' && !name.trim()) {
+      setError('Le nom d utilisateur est requis.');
       return;
     }
 
@@ -40,8 +40,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       return;
     }
 
-    if (!email.trim()) {
-      setError('L email est requis.');
+    if (mode === 'login' && !email.trim()) {
+      setError('Le nom d utilisateur est requis.');
       return;
     }
 
@@ -49,9 +49,22 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
     try {
       if (mode === 'login') {
-        await authService.login({ email, password });
+        // Pour le login : nettoyer le username et générer l'email
+        const cleanedUsername = email.replace(/\s+/g, '');
+        const generatedEmail = cleanedUsername.toLowerCase() + '@gmail.com';
+
+        await authService.login({ email: generatedEmail, password });
       } else {
-        await authService.signup({ name, email, password, sex: Number(sex) });
+        // Pour le signup : nettoyer le username et générer l'email
+        const cleanedName = name.replace(/\s+/g, '');
+        const generatedEmail = cleanedName.toLowerCase() + '@gmail.com';
+
+        await authService.signup({
+          name: cleanedName,
+          email: generatedEmail,
+          password,
+          sex: Number(sex)
+        });
       }
 
       const user = await authService.getCurrentUser();
@@ -144,20 +157,22 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               </div>
             )}
 
-            <div>
-              <label className="text-sm font-medium text-gray-700" htmlFor="email">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="vous@gmail.com"
-                className="mt-2 w-full px-4 py-3 bg-gray-100 rounded-lg border-2 border-transparent focus:border-yellow-400 focus:ring-0 outline-none transition"
-                required
-              />
-            </div>
+            {mode === 'login' && (
+              <div>
+                <label className="text-sm font-medium text-gray-700" htmlFor="email">
+                  Nom d utilisateur
+                </label>
+                <input
+                  id="email"
+                  type="text"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="kitanago05, pussycat509, bigdickontown"
+                  className="mt-2 w-full px-4 py-3 bg-gray-100 rounded-lg border-2 border-transparent focus:border-yellow-400 focus:ring-0 outline-none transition"
+                  required
+                />
+              </div>
+            )}
 
             <div>
               <label className="text-sm font-medium text-gray-700" htmlFor="password">
