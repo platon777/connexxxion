@@ -18,6 +18,7 @@ import SubjectsPage from './components/SubjectsPage';
 import ConfessionsPage from './components/ConfessionsPage';
 import ConfessionDetailPage from './components/ConfessionDetailPage';
 import LoginPage from './components/LoginPage';
+import DonationsPage from './components/DonationsPage';
 import MobileNav from './components/MobileNav';
 import AddCategoryForm from './components/AddCategoryForm';
 import AddSubjectForm from './components/AddSubjectForm';
@@ -36,6 +37,7 @@ const App: React.FC = () => {
   const [modalState, setModalState] = useState<ModalState>(null);
   const [confessionComments, setConfessionComments] = useState<Record<number, Comment[]>>({});
   const selectedConfessionIdRef = useRef<number | null>(null);
+  const [previousView, setPreviousView] = useState<View | null>(null);
 
   // --- Load initial data ---
   useEffect(() => {
@@ -449,6 +451,53 @@ const App: React.FC = () => {
     }
   };
 
+  const openDonations = () => {
+    setPreviousView(view);
+    setView('donations');
+  };
+
+  const handleDonationBack = () => {
+    const fallbackView: View = previousView && previousView !== 'donations' ? previousView : 'home';
+    setPreviousView(null);
+    if (fallbackView === 'confessionDetail') {
+      if (selectedConfessionId) {
+        navigate('confessionDetail', selectedCategoryId, selectedThemeId, selectedConfessionId);
+        return;
+      }
+      if (selectedThemeId) {
+        navigate('confessions', selectedCategoryId, selectedThemeId);
+        return;
+      }
+      if (selectedCategoryId) {
+        navigate('subjects', selectedCategoryId);
+        return;
+      }
+      navigate('categories');
+      return;
+    }
+    if (fallbackView === 'confessions') {
+      if (selectedThemeId) {
+        navigate('confessions', selectedCategoryId, selectedThemeId);
+        return;
+      }
+      if (selectedCategoryId) {
+        navigate('subjects', selectedCategoryId);
+        return;
+      }
+      navigate('categories');
+      return;
+    }
+    if (fallbackView === 'subjects') {
+      if (selectedCategoryId) {
+        navigate('subjects', selectedCategoryId);
+        return;
+      }
+      navigate('categories');
+      return;
+    }
+    navigate(fallbackView);
+  };
+
   // --- CRUD Operations ---
   const closeModal = () => setModalState(null);
 
@@ -775,6 +824,8 @@ const App: React.FC = () => {
         );
       case 'login':
         return <LoginPage onLogin={handleLoginSuccess} />;
+      case 'donations':
+        return <DonationsPage onBack={handleDonationBack} />;
       default:
         return <HomePage onStart={() => navigate('categories')} />;
     }
@@ -844,6 +895,24 @@ const App: React.FC = () => {
           onAddClick={handleMobileAdd}
           showAddButton={showMobileAddButton}
         />
+      )}
+      {!isLoginView && view !== 'donations' && (
+        <button
+          type="button"
+          onClick={openDonations}
+          className="fixed bottom-24 right-6 md:bottom-10 md:right-10 z-40 inline-flex items-center gap-2 bg-gradient-to-r from-yellow-400 via-orange-400 to-rose-400 text-gray-900 font-semibold px-4 py-3 rounded-full shadow-xl shadow-amber-300/40 hover:shadow-amber-500/50 transform hover:-translate-y-1 transition duration-200"
+          aria-label="Soutenir Connexxxion"
+        >
+          <span className="hidden sm:inline-block text-sm">Soutenir Connexxxion</span>
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.8}
+              d="M12 8c-1.657 0-3-1.567-3-3.5S10.343 1 12 1s3 1.567 3 3.5S13.657 8 12 8zm0 0v13m0 0l-4-4m4 4l4-4"
+            />
+          </svg>
+        </button>
       )}
       {!isLoginView && renderModal()}
       {!isLoginView && <div className="pb-20 md:pb-0"></div>}

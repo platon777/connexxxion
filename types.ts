@@ -114,7 +114,7 @@ export interface SignupRequest {
 // Frontend UI Types
 // ============================================
 
-export type View = 'home' | 'categories' | 'subjects' | 'confessions' | 'confessionDetail' | 'login';
+export type View = 'home' | 'categories' | 'subjects' | 'confessions' | 'confessionDetail' | 'login' | 'donations';
 
 export type ModalState =
   | null
