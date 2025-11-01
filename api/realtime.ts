@@ -7,12 +7,11 @@ import { API_FALLBACK_HOST } from './client';
 
 type RealtimeMessageHandler = (data: unknown) => void | Promise<void>;
 
-// Get Xano instance base URL from environment or use fallback
-const INSTANCE_BASE_URL = import.meta.env.VITE_INSTANCE_BASE_URL || API_FALLBACK_HOST;
+// Xano instance base URL
+const INSTANCE_BASE_URL = API_FALLBACK_HOST;
 
-// IMPORTANT: You need to set this in your .env file as VITE_REALTIME_CONNECTION_HASH
-// Find this in Xano Dashboard -> Realtime -> Settings
-const REALTIME_CONNECTION_HASH = import.meta.env.VITE_REALTIME_CONNECTION_HASH || '';
+// Realtime connection hash from Xano Dashboard -> Realtime -> Settings
+const REALTIME_CONNECTION_HASH = 'tKi3HqCgJSGS8TLdG9EMHmEuGMQ';
 
 let xanoClient: XanoClient | null = null;
 
@@ -50,12 +49,9 @@ export const subscribeToRealtimeChannel = (
     return () => {};
   }
 
-  // Check if realtime is configured
+  // Check if realtime is configured (should always be true now)
   if (!REALTIME_CONNECTION_HASH) {
-    console.warn(
-      '⚠️ Xano Realtime not configured. Please set VITE_REALTIME_CONNECTION_HASH in your .env file.\n' +
-      'Find this in: Xano Dashboard → Realtime → Settings'
-    );
+    console.error('Xano Realtime hash is missing');
     return () => {};
   }
 
