@@ -19,6 +19,7 @@ import ConfessionsPage from './components/ConfessionsPage';
 import ConfessionDetailPage from './components/ConfessionDetailPage';
 import LoginPage from './components/LoginPage';
 import DonationsPage from './components/DonationsPage';
+import DonationButton from './components/DonationButton';
 import MobileNav from './components/MobileNav';
 import AddCategoryForm from './components/AddCategoryForm';
 import AddSubjectForm from './components/AddSubjectForm';
@@ -897,22 +898,7 @@ const App: React.FC = () => {
         />
       )}
       {!isLoginView && view !== 'donations' && (
-        <button
-          type="button"
-          onClick={openDonations}
-          className="fixed bottom-24 right-6 md:bottom-10 md:right-10 z-40 inline-flex items-center gap-2 bg-gradient-to-r from-yellow-400 via-orange-400 to-rose-400 text-gray-900 font-semibold px-4 py-3 rounded-full shadow-xl shadow-amber-300/40 hover:shadow-amber-500/50 transform hover:-translate-y-1 transition duration-200"
-          aria-label="Soutenir Connexxxion"
-        >
-          <span className="hidden sm:inline-block text-sm">Soutenir Connexxxion</span>
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.8}
-              d="M12 8c-1.657 0-3-1.567-3-3.5S10.343 1 12 1s3 1.567 3 3.5S13.657 8 12 8zm0 0v13m0 0l-4-4m4 4l4-4"
-            />
-          </svg>
-        </button>
+        <DonationButton onClick={openDonations} />
       )}
       {!isLoginView && renderModal()}
       {!isLoginView && <div className="pb-20 md:pb-0"></div>}

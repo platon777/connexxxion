@@ -11,7 +11,7 @@ const DonationsPage: React.FC<DonationsPageProps> = ({ onBack }) => {
     <section className="max-w-3xl mx-auto bg-white shadow-xl rounded-3xl overflow-hidden ring-1 ring-yellow-100">
       <header className="bg-gradient-to-r from-yellow-400 via-orange-400 to-rose-400 px-6 py-8 text-center text-white">
         <p className="uppercase tracking-widest text-sm font-semibold opacity-90">Soutenez Connexxxion</p>
-        <h1 className="text-3xl md:text-4xl font-extrabold mt-2">Participez a la magie des Confessions</h1>
+        <h1 className="text-3xl md:text-4xl font-extrabold mt-2">Participez au developpement de la plateforme</h1>
         <p className="mt-3 text-sm md:text-base text-white/90">
           Chaque contribution nous aide a garder la plateforme vivante, gratuite et chaleureuse pour toute la communaute.
         </p>
@@ -23,11 +23,28 @@ const DonationsPage: React.FC<DonationsPageProps> = ({ onBack }) => {
           l&apos;hebergement, continuer a ameliorer les fonctionnalites et soutenir l&apos;equipe.
         </p>
 
-        <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-6 space-y-3">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-6 space-y-4">
           <h2 className="text-xl font-semibold text-yellow-900">Comment contribuer ?</h2>
+
+          {/* Numéro MonCash en évidence */}
+          <div className="bg-white border-2 border-yellow-400 rounded-xl p-4 text-center">
+            <p className="text-sm text-yellow-900/70 mb-2">Numéro MonCash</p>
+            <p className="text-2xl md:text-3xl font-bold text-yellow-900 tracking-wider">47308317</p>
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText('47308317');
+                alert('Numéro copié !');
+              }}
+              className="mt-3 text-xs text-yellow-700 hover:text-yellow-900 underline"
+            >
+              Cliquez pour copier
+            </button>
+          </div>
+
           <ol className="list-decimal list-inside text-yellow-900/90 space-y-2">
             <li>Ouvrez votre application MonCash.</li>
-            <li>Scannez l&apos;affiche ci-dessous ou saisissez les informations associees.</li>
+            <li>Scannez l&apos;affiche ci-dessous ou saisissez le numéro ci-dessus.</li>
             <li>Choisissez le montant qui vous convient et validez.</li>
           </ol>
           <p className="text-sm text-yellow-900/70">
