@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { Category, Theme, Confession, Comment, View, ModalState, User } from './types';
 import {
   categoryService,
@@ -35,6 +35,7 @@ const App: React.FC = () => {
   const [selectedConfessionId, setSelectedConfessionId] = useState<number | null>(null);
   const [modalState, setModalState] = useState<ModalState>(null);
   const [confessionComments, setConfessionComments] = useState<Record<number, Comment[]>>({});
+  const selectedConfessionIdRef = useRef<number | null>(null);
 
   // --- Load initial data ---
   useEffect(() => {
@@ -47,6 +48,10 @@ const App: React.FC = () => {
     })();
     loadCategories();
   }, []);
+
+  useEffect(() => {
+    selectedConfessionIdRef.current = selectedConfessionId;
+  }, [selectedConfessionId]);
 
   useEffect(() => {
     const unsubscribeConfessions = subscribeToRealtimeChannel('confessions', async () => {
@@ -67,7 +72,13 @@ const App: React.FC = () => {
         await loadConfessionDetail(confessionId);
         await loadConfessionComments(confessionId);
       } else {
-        await loadCategories({ silent: true });
+        const fallbackId = selectedConfessionIdRef.current;
+        if (fallbackId) {
+          await loadConfessionDetail(fallbackId);
+          await loadConfessionComments(fallbackId);
+        } else {
+          await loadCategories({ silent: true });
+        }
       }
     });
 
