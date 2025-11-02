@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 
 import moncashImage from '../assets/moncash_connexxxion.jpg';
 import MemoForm from './MemoForm';
@@ -11,11 +11,20 @@ interface DonationsPageProps {
 const DonationsPage: React.FC<DonationsPageProps> = ({ onBack, onMemoSubmit }) => {
   const [showMemoForm, setShowMemoForm] = useState(false);
   const moncashNumber = '47308317';
+  const memoFormRef = useRef<HTMLDivElement>(null);
 
   const handleWhatsAppRedirect = () => {
     const message = encodeURIComponent('Bonjour! Je souhaite faire un don pour soutenir Connexxxion.');
     const whatsappUrl = `https://wa.me/${moncashNumber}?text=${message}`;
     window.open(whatsappUrl, '_blank');
+  };
+
+  const handleShowMemoForm = () => {
+    setShowMemoForm(true);
+    // Scroll vers le formulaire après un court délai pour laisser le DOM se mettre à jour
+    setTimeout(() => {
+      memoFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
   };
 
   const handleMemoSubmit = async (data: { user_name?: string; description: string }) => {
@@ -84,7 +93,7 @@ const DonationsPage: React.FC<DonationsPageProps> = ({ onBack, onMemoSubmit }) =
             {/* Option 1: Formulaire de memo */}
             <button
               type="button"
-              onClick={() => setShowMemoForm(!showMemoForm)}
+              onClick={handleShowMemoForm}
               className="flex items-center justify-center gap-3 px-6 py-4 bg-white border-2 border-yellow-300 text-yellow-900 font-semibold rounded-xl hover:bg-yellow-50 hover:border-yellow-400 transition-all duration-300 shadow-sm"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -109,7 +118,9 @@ const DonationsPage: React.FC<DonationsPageProps> = ({ onBack, onMemoSubmit }) =
 
         {/* Formulaire de memo (conditionnel) */}
         {showMemoForm && (
-          <MemoForm onSubmit={handleMemoSubmit} onClose={() => setShowMemoForm(false)} />
+          <div ref={memoFormRef}>
+            <MemoForm onSubmit={handleMemoSubmit} onClose={() => setShowMemoForm(false)} />
+          </div>
         )}
 
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
