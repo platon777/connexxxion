@@ -75,9 +75,10 @@ const ConfessionCard: React.FC<{
   const viewCount = confession.view_count ?? 0;
   const isLiked = Boolean(confession._is_liked);
 
-  // Ne récupérer le sexe que si _user_object existe pour éviter l'incohérence
-  const authorSex = confession._user_object
-    ? (confession._user_object.sex ?? (confession._user_object as any)?.sexe ?? null)
+  // Récupérer le sexe depuis _user_object ou _user_confession
+  const userObject = confession._user_object ?? (confession as any)?._user_confession;
+  const authorSex = userObject
+    ? (userObject.sex ?? (userObject as any)?.sexe ?? null)
     : null;
   const genderIcon = getGenderIcon(authorSex);
   const formattedDate = new Date(confession.created_at).toLocaleDateString('fr-FR', {

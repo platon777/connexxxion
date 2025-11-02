@@ -112,7 +112,8 @@ const ConfessionDetailPage: React.FC<ConfessionDetailPageProps> = ({
     });
   }, [comments]);
   const commentsToShow = sortedComments.slice(0, visibleCommentsCount);
-  const confessionGenderIcon = getGenderIcon(confession._user_object?.sex ?? (confession._user_object as any)?.sexe);
+  const userObject = confession._user_object ?? (confession as any)?._user_confession;
+  const confessionGenderIcon = getGenderIcon(userObject?.sex ?? (userObject as any)?.sexe);
   const formattedDate = new Date(confession.created_at).toLocaleDateString('fr-FR', {
     day: 'numeric',
     month: 'short',

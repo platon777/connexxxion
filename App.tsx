@@ -51,12 +51,84 @@ const App: React.FC = () => {
         console.warn('Unable to prefetch device id:', error);
       }
     })();
+
+    // Restore user session if authenticated
+    void (async () => {
+      if (authService.isAuthenticated()) {
+        try {
+          const restoredUser = await authService.getCurrentUser();
+          setUser(restoredUser);
+        } catch (error) {
+          console.error('Failed to restore user session:', error);
+          // Clear invalid token
+          authService.logout();
+        }
+      }
+    })();
+
     loadCategories();
   }, []);
 
   useEffect(() => {
     selectedConfessionIdRef.current = selectedConfessionId;
   }, [selectedConfessionId]);
+
+  // --- Browser history integration ---
+  useEffect(() => {
+    // Push initial state
+    const initialState = {
+      view,
+      categoryId: selectedCategoryId,
+      themeId: selectedThemeId,
+      confessionId: selectedConfessionId,
+    };
+    window.history.replaceState(initialState, '', window.location.pathname);
+
+    // Listen for browser back/forward button
+    const handlePopState = (event: PopStateEvent) => {
+      const state = event.state;
+      if (state) {
+        setView(state.view || 'home');
+        setSelectedCategoryId(state.categoryId || null);
+        setSelectedThemeId(state.themeId || null);
+        setSelectedConfessionId(state.confessionId || null);
+
+        // Load data if navigating to confession detail
+        if (state.view === 'confessionDetail' && state.confessionId) {
+          loadConfessionDetail(state.confessionId);
+          loadConfessionComments(state.confessionId);
+        }
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+
+  // Push state to history when view changes
+  useEffect(() => {
+    const state = {
+      view,
+      categoryId: selectedCategoryId,
+      themeId: selectedThemeId,
+      confessionId: selectedConfessionId,
+    };
+
+    // Only push if state has actually changed from current history state
+    const currentState = window.history.state;
+    if (
+      !currentState ||
+      currentState.view !== state.view ||
+      currentState.categoryId !== state.categoryId ||
+      currentState.themeId !== state.themeId ||
+      currentState.confessionId !== state.confessionId
+    ) {
+      window.history.pushState(state, '', window.location.pathname);
+    }
+  }, [view, selectedCategoryId, selectedThemeId, selectedConfessionId]);
 
   useEffect(() => {
     const unsubscribeConfessions = subscribeToRealtimeChannel('confessions', async () => {
