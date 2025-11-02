@@ -278,15 +278,21 @@ const App: React.FC = () => {
   const isAdmin = user?.role?.toLowerCase() === 'admin';
   const isAuthenticated = Boolean(user);
   const showMobileAddButton = (() => {
-    if (isAdmin) {
-      return true;
-    }
-    if (!isAuthenticated) {
+    // Pages où le bouton + ne doit JAMAIS apparaître
+    if (view === 'home' || view === 'donations' || view === 'memos' || view === 'login') {
       return false;
     }
-    if (view === 'confessions' || view === 'confessionDetail') {
+
+    // Pour les admins sur categories et subjects
+    if (isAdmin && (view === 'categories' || view === 'subjects')) {
       return true;
     }
+
+    // Pour tous les utilisateurs connectés sur confessions
+    if (isAuthenticated && (view === 'confessions' || view === 'confessionDetail')) {
+      return true;
+    }
+
     return false;
   })();
 

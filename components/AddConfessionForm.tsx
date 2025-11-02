@@ -9,6 +9,7 @@ interface AddConfessionFormProps {
 
 const AddConfessionForm: React.FC<AddConfessionFormProps> = ({ onSubmit, onClose, itemToEdit }) => {
   const [content, setContent] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditMode = Boolean(itemToEdit);
 
   useEffect(() => {
@@ -17,9 +18,11 @@ const AddConfessionForm: React.FC<AddConfessionFormProps> = ({ onSubmit, onClose
     }
   }, [itemToEdit, isEditMode]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (content.trim()) {
+    if (content.trim() && !isSubmitting) {
+      setIsSubmitting(true);
+      onClose(); // Fermer immédiatement
       onSubmit(content.trim());
     }
   };
@@ -52,9 +55,9 @@ const AddConfessionForm: React.FC<AddConfessionFormProps> = ({ onSubmit, onClose
             />
           </div>
           <div className="flex justify-end space-x-4 mt-6">
-            <button type="button" onClick={onClose} className="px-6 py-2 bg-gray-100 text-gray-700 font-semibold rounded-full hover:bg-gray-200 transition-all duration-300">Annuler</button>
-            <button type="submit" className="px-8 py-3 bg-yellow-400 text-gray-900 font-bold rounded-full hover:bg-yellow-500 transition-all duration-300 transform hover:scale-105">
-                {isEditMode ? 'Enregistrer' : 'Se confesser'}
+            <button type="button" onClick={onClose} className="px-6 py-2 bg-gray-100 text-gray-700 font-semibold rounded-full hover:bg-gray-200 transition-all duration-300" disabled={isSubmitting}>Annuler</button>
+            <button type="submit" className="px-8 py-3 bg-yellow-400 text-gray-900 font-bold rounded-full hover:bg-yellow-500 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed" disabled={isSubmitting}>
+                {isSubmitting ? 'En cours...' : isEditMode ? 'Enregistrer' : 'Se confesser'}
             </button>
           </div>
         </form>

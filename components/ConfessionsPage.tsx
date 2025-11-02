@@ -8,8 +8,21 @@ const BOY_ICON = String.fromCodePoint(0x1f466);
 const GIRL_ICON = String.fromCodePoint(0x1f467);
 const CONFESSIONS_PER_PAGE = 10;
 
-const getGenderIcon = (sex?: number | string): string => {
-  const normalized = typeof sex === 'string' ? parseInt(sex, 10) : sex;
+const getGenderIcon = (sex?: number | string | null): string => {
+  // Gérer les cas null/undefined
+  if (sex === null || sex === undefined) return '';
+
+  // Convertir en nombre si c'est une string
+  let normalized: number;
+  if (typeof sex === 'string') {
+    const parsed = parseInt(sex.trim(), 10);
+    if (isNaN(parsed)) return '';
+    normalized = parsed;
+  } else {
+    normalized = sex;
+  }
+
+  // Retourner l'icône appropriée
   if (normalized === 1) return BOY_ICON;
   if (normalized === 2) return GIRL_ICON;
   return '';
@@ -61,7 +74,11 @@ const ConfessionCard: React.FC<{
   const likeCount = confession.real_like_count ?? confession.like_count ?? 0;
   const viewCount = confession.view_count ?? 0;
   const isLiked = Boolean(confession._is_liked);
-  const authorSex = confession._user_object?.sex ?? (confession._user_object as any)?.sexe;
+
+  // Ne récupérer le sexe que si _user_object existe pour éviter l'incohérence
+  const authorSex = confession._user_object
+    ? (confession._user_object.sex ?? (confession._user_object as any)?.sexe ?? null)
+    : null;
   const genderIcon = getGenderIcon(authorSex);
   const formattedDate = new Date(confession.created_at).toLocaleDateString('fr-FR', {
     day: 'numeric',

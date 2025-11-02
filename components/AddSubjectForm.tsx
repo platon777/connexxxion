@@ -9,6 +9,7 @@ interface AddSubjectFormProps {
 
 const AddSubjectForm: React.FC<AddSubjectFormProps> = ({ onSubmit, onClose, itemToEdit }) => {
   const [title, setTitle] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditMode = Boolean(itemToEdit);
 
   useEffect(() => {
@@ -18,9 +19,11 @@ const AddSubjectForm: React.FC<AddSubjectFormProps> = ({ onSubmit, onClose, item
   }, [itemToEdit, isEditMode]);
 
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (title.trim()) {
+    if (title.trim() && !isSubmitting) {
+      setIsSubmitting(true);
+      onClose(); // Fermer immédiatement
       onSubmit(title.trim());
     }
   };
@@ -48,9 +51,9 @@ const AddSubjectForm: React.FC<AddSubjectFormProps> = ({ onSubmit, onClose, item
             />
           </div>
           <div className="flex justify-end space-x-4 mt-8">
-            <button type="button" onClick={onClose} className="px-6 py-2 bg-gray-100 text-gray-700 font-semibold rounded-full hover:bg-gray-200 transition-all duration-300">Annuler</button>
-            <button type="submit" className="px-6 py-2 bg-yellow-400 text-gray-900 font-bold rounded-full hover:bg-yellow-500 transition-all duration-300 transform hover:scale-105">
-                {isEditMode ? 'Enregistrer' : 'Créer'}
+            <button type="button" onClick={onClose} className="px-6 py-2 bg-gray-100 text-gray-700 font-semibold rounded-full hover:bg-gray-200 transition-all duration-300" disabled={isSubmitting}>Annuler</button>
+            <button type="submit" className="px-6 py-2 bg-yellow-400 text-gray-900 font-bold rounded-full hover:bg-yellow-500 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed" disabled={isSubmitting}>
+                {isSubmitting ? 'En cours...' : isEditMode ? 'Enregistrer' : 'Créer'}
             </button>
           </div>
         </form>

@@ -8,8 +8,21 @@ const BOY_ICON = String.fromCodePoint(0x1f466);
 const GIRL_ICON = String.fromCodePoint(0x1f467);
 const COMMENTS_PER_PAGE = 10;
 
-const getGenderIcon = (sex?: number | string): string => {
-  const normalized = typeof sex === 'string' ? parseInt(sex, 10) : sex;
+const getGenderIcon = (sex?: number | string | null): string => {
+  // Gérer les cas null/undefined
+  if (sex === null || sex === undefined) return '';
+
+  // Convertir en nombre si c'est une string
+  let normalized: number;
+  if (typeof sex === 'string') {
+    const parsed = parseInt(sex.trim(), 10);
+    if (isNaN(parsed)) return '';
+    normalized = parsed;
+  } else {
+    normalized = sex;
+  }
+
+  // Retourner l'icône appropriée
   if (normalized === 1) return BOY_ICON;
   if (normalized === 2) return GIRL_ICON;
   return '';
