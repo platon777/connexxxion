@@ -44,7 +44,7 @@ const MemoForm: React.FC<MemoFormProps> = ({ onSubmit, onClose }) => {
     <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-6 space-y-4 border-2 border-yellow-200">
       <h3 className="text-xl font-semibold text-yellow-900">Laissez-nous un petit mot</h3>
       <p className="text-sm text-gray-600">
-        Partagez un message de soutien ou dites-nous ce que vous pensez de Connexxxion !
+        Partagez un message de soutien ou dites-nous ce que vous pensez de ConnexXxion !
       </p>
 
       <div className="space-y-2">

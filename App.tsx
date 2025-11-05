@@ -507,7 +507,7 @@ const App: React.FC = () => {
   };
 
   const promptLoginForFullExperience = () => {
-    alert('Pour profiter pleinement de Connexxxion, merci de vous connecter pour continuer.');
+    alert('Pour profiter pleinement de ConnexXxion, merci de vous connecter pour continuer.');
     openLoginView();
   };
 
@@ -1131,7 +1131,7 @@ const App: React.FC = () => {
     try {
       if (navigator.share) {
         await navigator.share({
-          title: 'Confession Connexxxion',
+          title: 'Confession ConnexXxion',
           url: shareUrl,
         });
         return;

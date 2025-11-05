@@ -120,7 +120,11 @@ const ConfessionCard: React.FC<{
         <button
           type="button"
           onClick={handleLikeClick}
-          className={`flex items-center space-x-1 text-gray-500 transition-transform duration-200 hover:scale-105 ${isLiked ? 'text-yellow-500' : ''}`}
+          className={`flex items-center gap-1 px-3 py-1 rounded-full transition-transform duration-200 hover:scale-105 ${
+            isLiked
+              ? 'bg-yellow-100 text-yellow-700 border border-yellow-200'
+              : 'text-gray-500 hover:text-yellow-600 hover:bg-yellow-50'
+          }`}
           aria-label="Aimer cette confession"
         >
           <span className="text-lg">{PEACH_ICON}</span>

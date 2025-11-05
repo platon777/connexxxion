@@ -14,7 +14,7 @@ const DonationsPage: React.FC<DonationsPageProps> = ({ onBack, onMemoSubmit }) =
   const memoFormRef = useRef<HTMLDivElement>(null);
 
   const handleWhatsAppRedirect = () => {
-    const message = encodeURIComponent('Bonjour! Je souhaite faire un don pour soutenir Connexxxion.');
+    const message = encodeURIComponent('Bonjour! Je souhaite faire un don pour soutenir ConnexXxion.');
     const whatsappUrl = `https://wa.me/${moncashNumber}?text=${message}`;
     window.open(whatsappUrl, '_blank');
   };
@@ -36,7 +36,7 @@ const DonationsPage: React.FC<DonationsPageProps> = ({ onBack, onMemoSubmit }) =
   return (
     <section className="max-w-3xl mx-auto bg-white shadow-xl rounded-3xl overflow-hidden ring-1 ring-yellow-100">
       <header className="bg-gradient-to-r from-yellow-400 via-orange-400 to-rose-400 px-6 py-8 text-center text-white">
-        <p className="uppercase tracking-widest text-sm font-semibold opacity-90">Soutenez Connexxxion</p>
+        <p className="uppercase tracking-widest text-sm font-semibold opacity-90">Soutenez ConnexXxion</p>
         <h1 className="text-3xl md:text-4xl font-extrabold mt-2">Participez au developpement de la plateforme</h1>
         <p className="mt-3 text-sm md:text-base text-white/90">
           Chaque contribution nous aide a garder la plateforme vivante, gratuite et chaleureuse pour toute la communaute.
@@ -45,7 +45,7 @@ const DonationsPage: React.FC<DonationsPageProps> = ({ onBack, onMemoSubmit }) =
 
       <div className="p-8 space-y-8">
         <p className="text-gray-700 leading-relaxed text-base md:text-lg">
-          Nous adorons construire cet espace ou chacun peut s&apos;exprimer librement. Si Connexxxion vous apporte un sourire, un moment de reflexion ou un soutien, vous pouvez contribuer en toute simplicite via MonCash pour nous permettre de couvrir
+          Nous adorons construire cet espace ou chacun peut s&apos;exprimer librement. Si ConnexXxion vous apporte un sourire, un moment de reflexion ou un soutien, vous pouvez contribuer en toute simplicite via MonCash pour nous permettre de couvrir
           l&apos;hebergement, continuer a ameliorer les fonctionnalites et soutenir l&apos;equipe.
         </p>
 
@@ -79,7 +79,7 @@ const DonationsPage: React.FC<DonationsPageProps> = ({ onBack, onMemoSubmit }) =
         </div>
 
         <figure className="rounded-2xl overflow-hidden shadow-lg border border-gray-100">
-          <img src={moncashImage} alt="Informations de contribution MonCash Connexxxion" className="w-full object-cover" />
+          <img src={moncashImage} alt="Informations de contribution MonCash ConnexXxion" className="w-full object-cover" />
         </figure>
 
         {/* Options de contact */}

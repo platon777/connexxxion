@@ -83,10 +83,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         <div className="w-full md:w-1/2 p-8 flex flex-col justify-between bg-gradient-to-br from-yellow-400 to-amber-400 text-white">
           <div>
             <div className="bg-white p-2 rounded-md inline-block shadow-md">
-              <img src={logoImg} alt="ConneXXion Logo" className="h-12" />
+              <img src={logoImg} alt="ConnexXxion Logo" className="h-12" />
             </div>
             <p className="mt-8 text-lg leading-relaxed">
-              Bienvenue sur ConneXXion. Votre espace intime pour partager, echanger et rencontrer des partenaires avec discretion.
+              Bienvenue sur ConnexXxion. Votre espace intime pour partager, echanger et rencontrer des partenaires avec discretion.
             </p>
           </div>
           <div className="space-y-4 text-sm mt-8">

@@ -35,7 +35,7 @@ const DonationButton: React.FC<DonationButtonProps> = ({ onClick }) => {
         transition-all duration-300 ease-out
         ${isPulsing ? 'animate-pulse' : ''}
       `}
-      aria-label="Faire un don pour soutenir Connexxxion"
+      aria-label="Faire un don pour soutenir ConnexXxion"
     >
       {/* Icône coeur avec animation */}
       <svg

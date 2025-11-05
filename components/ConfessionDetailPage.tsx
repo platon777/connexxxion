@@ -81,7 +81,11 @@ const CommentCard: React.FC<{
             <button
               type="button"
               onClick={onToggleLike}
-              className={`group flex items-center space-x-1 text-gray-500 transition-transform duration-200 hover:scale-105 ${isLiked ? 'text-yellow-500' : ''}`}
+              className={`group flex items-center gap-1 px-2.5 py-1 rounded-full transition-transform duration-200 hover:scale-105 ${
+                isLiked
+                  ? 'bg-yellow-100 text-yellow-700 border border-yellow-200'
+                  : 'text-gray-500 hover:text-yellow-600 hover:bg-yellow-50'
+              }`}
               aria-label="Aimer ce commentaire"
             >
               <span className="text-lg transition-transform duration-200 group-hover:scale-125">{PEACH_ICON}</span>
@@ -186,16 +190,20 @@ const ConfessionDetailPage: React.FC<ConfessionDetailPageProps> = ({
               />
             </svg>
             <span className="text-sm font-medium">Copier le lien</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => onToggleConfessionLike(confession)}
-            className={`flex items-center space-x-2 text-gray-500 transition-transform duration-200 hover:scale-105 ${isConfessionLiked ? 'text-yellow-500' : ''}`}
-            aria-label="Aimer cette confession"
-          >
-            <span className="text-2xl">{PEACH_ICON}</span>
-            <span className="font-bold">{likeCount}</span>
-          </button>
+        </button>
+        <button
+          type="button"
+          onClick={() => onToggleConfessionLike(confession)}
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full transition-transform duration-200 hover:scale-105 ${
+            isConfessionLiked
+              ? 'bg-yellow-100 text-yellow-700 border border-yellow-200'
+              : 'text-gray-500 hover:text-yellow-600 hover:bg-yellow-50'
+          }`}
+          aria-label="Aimer cette confession"
+        >
+          <span className="text-2xl">{PEACH_ICON}</span>
+          <span className="font-bold">{likeCount}</span>
+        </button>
           <div className="flex items-center space-x-2 text-gray-500">
             <span className="text-2xl">{GRAPE_ICON}</span>
             <span className="font-bold">{comments.length}</span>
