@@ -21,6 +21,7 @@ const HomePage: React.FC<HomePageProps> = ({ onStart }) => {
         <div className="mb-6 text-7xl md:text-8xl animate-float" style={{ animationDuration: '5s' }}>
           {CONFESSION_ICON}
           {/* ok */}
+          {/* ok2 */}
         </div>
 
         <h1 className="text-4xl md:text-6xl font-extrabold text-gray-800 leading-tight">
