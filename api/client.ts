@@ -5,12 +5,19 @@
 
 export const API_FALLBACK_HOST = 'https://xjxu-zuqd-jod4.n7e.xano.io';
 
+const sanitizeBaseUrl = (value: string | undefined, defaultPath: string) => {
+  if (!value) {
+    return `${API_FALLBACK_HOST}${defaultPath}`;
+  }
+  return value.trim();
+};
+
 const API_BASE_URLS = {
-  auth: import.meta.env.VITE_API_BASE_URL_AUTH || `${API_FALLBACK_HOST}/api:oF6y6S5v`,
-  category: import.meta.env.VITE_API_BASE_URL_CATEGORY || `${API_FALLBACK_HOST}/api:R2I6TP0n`,
-  comment: import.meta.env.VITE_API_BASE_URL_COMMENT || `${API_FALLBACK_HOST}/api:kRM_7IxH`,
-  confession: import.meta.env.VITE_API_BASE_URL_CONFESSION || `${API_FALLBACK_HOST}/api:scRn_GVD`,
-  theme: import.meta.env.VITE_API_BASE_URL_THEME || `${API_FALLBACK_HOST}/api:0lgBJOXe`,
+  auth: sanitizeBaseUrl(import.meta.env.VITE_API_BASE_URL_AUTH, '/api/auth'),
+  category: sanitizeBaseUrl(import.meta.env.VITE_API_BASE_URL_CATEGORY, '/api/category'),
+  comment: sanitizeBaseUrl(import.meta.env.VITE_API_BASE_URL_COMMENT, '/api/comment'),
+  confession: sanitizeBaseUrl(import.meta.env.VITE_API_BASE_URL_CONFESSION, '/api/confession'),
+  theme: sanitizeBaseUrl(import.meta.env.VITE_API_BASE_URL_THEME, '/api/theme'),
 } as const;
 
 const AUTH_TOKEN_KEY = 'connexxion_auth_token';
