@@ -132,7 +132,7 @@ const SubjectsPage: React.FC<SubjectsPageProps> = ({
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-          <span>Retour aux cat\u00E9gories</span>
+          <span>Retour aux catégories</span>
         </button>
         <h1 className="text-4xl font-extrabold">{category.name}</h1>
       </div>
@@ -186,7 +186,7 @@ const SubjectsPage: React.FC<SubjectsPageProps> = ({
         })}
         {orderedSubjects.length === 0 && (
           <div className="md:col-span-2 lg:col-span-3 text-center py-10 bg-gray-50 rounded-lg">
-            <p className="text-gray-500">Aucun sujet dans cette cat\u00E9gorie pour le moment.</p>
+            <p className="text-gray-500">Aucun sujet dans cette catégorie pour le moment.</p>
           </div>
         )}
       </div>

@@ -27,7 +27,7 @@ const Header: React.FC<HeaderProps> = ({ onHomeClick, onCategoriesClick, onMemos
               Categories
             </button>
             {isAdmin && onMemosClick && (
-              <button onClick={onMemosClick} className="font-semibold text-yellow-600 hover:text-yellow-700 transition-colors flex items-center gap-2">
+              <button onClick={onMemosClick} className="font-semibold text-yellow-600 hover:text-yellow-700 transition-colors flex items-center gap-1">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                 </svg>
@@ -37,16 +37,16 @@ const Header: React.FC<HeaderProps> = ({ onHomeClick, onCategoriesClick, onMemos
           </nav>
           <div className="flex items-center">
             {userId ? (
-              <div className="flex flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-4">
+              <div className="flex flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-3">
                 <button
                   onClick={onLogout}
                   className="order-1 sm:order-2 px-4 py-2 bg-yellow-100 text-yellow-800 text-sm font-semibold rounded-full hover:bg-yellow-200 transition-colors"
                 >
                   Deconnexion
                 </button>
-                <span className="order-2 sm:order-1 mt-1 sm:mt-0 text-xs sm:text-sm font-medium text-gray-600 flex items-center gap-2">
+                <span className="order-2 sm:order-1 mt-1 sm:mt-0 text-xs sm:text-sm font-medium text-gray-600 flex items-center gap-1">
                   <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
-                  Connecté : <span className="font-bold text-gray-700">{userId}</span>
+                  Connect&eacute;: <span className="font-bold text-gray-700">{userId}</span>
                 </span>
               </div>
             ) : (
@@ -65,3 +65,6 @@ const Header: React.FC<HeaderProps> = ({ onHomeClick, onCategoriesClick, onMemos
 };
 
 export default Header;
+
+
+

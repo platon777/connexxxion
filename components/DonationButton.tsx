@@ -7,12 +7,12 @@ interface DonationButtonProps {
 const DonationButton: React.FC<DonationButtonProps> = ({ onClick }) => {
   const [isPulsing, setIsPulsing] = useState(false);
 
-  // Animation pulse subtile toutes les 10 secondes
+  // Animation pulse subtile toutes les 4 secondes
   useEffect(() => {
     const pulseInterval = setInterval(() => {
       setIsPulsing(true);
-      setTimeout(() => setIsPulsing(false), 2000);
-    }, 10000);
+      setTimeout(() => setIsPulsing(false), 1200);
+    }, 4000);
 
     return () => clearInterval(pulseInterval);
   }, []);
@@ -24,10 +24,10 @@ const DonationButton: React.FC<DonationButtonProps> = ({ onClick }) => {
       className={`
         group
         fixed bottom-24 right-6 md:bottom-10 md:right-10 z-40
-        inline-flex items-center gap-2
+        inline-flex items-center gap-1.5
         bg-gradient-to-r from-yellow-400 via-orange-400 to-rose-400
         text-gray-900 font-semibold
-        px-5 py-3 md:px-6 md:py-3.5
+        px-3.5 py-2 md:px-4 md:py-2.5
         rounded-full
         shadow-xl shadow-amber-300/40
         hover:shadow-2xl hover:shadow-amber-500/60
@@ -48,7 +48,7 @@ const DonationButton: React.FC<DonationButtonProps> = ({ onClick }) => {
       </svg>
 
       {/* Texte avec affichage responsive */}
-      <span className="text-xs sm:text-sm md:text-base font-bold">
+      <span className="text-[11px] sm:text-xs md:text-sm font-bold">
         Faire un don
       </span>
 
