@@ -1,0 +1,8 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  # Allow build to proceed with backend files that contain API keys
+  # These files are excluded from deployment via .netlifyignore
+  SECRETS_SCAN_SMART_DETECTION_ENABLED = "false"

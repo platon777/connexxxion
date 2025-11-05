@@ -1,0 +1,8 @@
+# Exclude backend Xano files from Netlify deployment and scanning
+agents/
+functions/
+tasks/
+tools/
+mcp_servers/
+docs/
+*.xs
