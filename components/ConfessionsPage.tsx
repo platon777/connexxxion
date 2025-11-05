@@ -37,6 +37,8 @@ interface ConfessionsPageProps {
   onDeleteConfession: (confession: Confession) => void;
   onToggleConfessionLike: (confession: Confession) => void;
   canModify: (item: any) => boolean;
+  isAuthenticated: boolean;
+  onRequestLogin: () => void;
 }
 
 const ConfessionCard: React.FC<{
@@ -153,13 +155,18 @@ const ConfessionsPage: React.FC<ConfessionsPageProps> = ({
   onDeleteConfession,
   onToggleConfessionLike,
   canModify,
+  isAuthenticated,
+  onRequestLogin,
 }) => {
   const confessions = Array.isArray(subject._confession) ? subject._confession : [];
   const [visibleCount, setVisibleCount] = useState(CONFESSIONS_PER_PAGE);
+  const [loadMoreClicks, setLoadMoreClicks] = useState(0);
   const subjectId = subject?.id ?? 0;
+  const isThemeActive = subject.Active === undefined ? true : Boolean(subject.Active);
 
   useEffect(() => {
     setVisibleCount(CONFESSIONS_PER_PAGE);
+    setLoadMoreClicks(0);
   }, [subjectId]);
 
   const sortedConfessions = useMemo(() => {
@@ -176,6 +183,16 @@ const ConfessionsPage: React.FC<ConfessionsPageProps> = ({
   );
 
   const confessionsCount = sortedConfessions.length;
+  const handleLoadMore = () => {
+    if (!isAuthenticated) {
+      if (loadMoreClicks >= 2) {
+        onRequestLogin();
+        return;
+      }
+      setLoadMoreClicks((prev) => prev + 1);
+    }
+    setVisibleCount((prev) => prev + CONFESSIONS_PER_PAGE);
+  };
 
   return (
     <div>
@@ -189,8 +206,13 @@ const ConfessionsPage: React.FC<ConfessionsPageProps> = ({
           </button>
           <h1 className="text-3xl font-bold text-gray-800">{subject.name}</h1>
           <p className="text-gray-500 mt-1">{confessionsCount} confession{confessionsCount > 1 ? 's' : ''}</p>
+          {!isThemeActive && (
+            <p className="mt-3 text-sm font-medium text-red-500">
+              Ce sujet est ferme aux nouvelles confessions pour le moment.
+            </p>
+          )}
         </div>
-        {canModify({}) && (
+        {canModify({}) && isThemeActive && (
           <button
             onClick={onAddConfession}
             className="mt-4 md:mt-0 hidden md:flex items-center space-x-2 px-6 py-3 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold rounded-full shadow-lg shadow-yellow-400/20 transition-all duration-300 transform hover:scale-105"
@@ -226,7 +248,7 @@ const ConfessionsPage: React.FC<ConfessionsPageProps> = ({
       {visibleCount < confessionsCount && (
         <div className="mt-8 text-center">
           <button
-            onClick={() => setVisibleCount((prev) => prev + CONFESSIONS_PER_PAGE)}
+            onClick={handleLoadMore}
             className="px-6 py-3 bg-white text-gray-700 font-semibold rounded-full hover:bg-gray-50 border border-gray-200 transition-all duration-300"
           >
             Charger plus de confessions

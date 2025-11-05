@@ -326,6 +326,16 @@ const App: React.FC = () => {
       }
     : undefined;
 
+  const isCurrentThemeActive = (() => {
+    if (selectedTheme && selectedTheme.Active !== undefined) {
+      return Boolean(selectedTheme.Active);
+    }
+    if (selectedConfession?._theme && selectedConfession._theme.Active !== undefined) {
+      return Boolean(selectedConfession._theme.Active);
+    }
+    return true;
+  })();
+
   // --- Auth ---
   const handleLogin = (loggedInUser: User) => {
     setUser(loggedInUser);
@@ -347,6 +357,11 @@ const App: React.FC = () => {
     setView('login');
   };
 
+  const promptLoginForFullExperience = () => {
+    alert('Pour profiter pleinement de Connexxxion, merci de vous connecter pour continuer.');
+    openLoginView();
+  };
+
   const isAdmin = user?.role?.toLowerCase() === 'admin';
   const isAuthenticated = Boolean(user);
   const showMobileAddButton = (() => {
@@ -362,6 +377,9 @@ const App: React.FC = () => {
 
     // Pour tous les utilisateurs connectés sur confessions
     if (isAuthenticated && (view === 'confessions' || view === 'confessionDetail')) {
+      if (!isCurrentThemeActive) {
+        return false;
+      }
       return true;
     }
 
@@ -428,6 +446,13 @@ const App: React.FC = () => {
 
   const openAddConfessionModal = () => {
     if (!ensureLoggedIn()) return;
+    const themeInactive =
+      (selectedTheme && selectedTheme.Active === false) ||
+      (!selectedTheme && selectedConfession?._theme?.Active === false);
+    if (themeInactive) {
+      alert('Ce sujet est ferme aux confessions pour le moment.');
+      return;
+    }
     setModalState({ type: 'addConfession' });
   };
 
@@ -658,13 +683,14 @@ const App: React.FC = () => {
   };
 
   // Theme (Subject)
-  const handleAddTheme = async (title: string) => {
+  const handleAddTheme = async ({ title, active }: { title: string; active: boolean }) => {
     if (!selectedCategoryId) return;
     if (!requireAdmin()) return;
     try {
       await themeService.createTheme({
         name: title,
         category: selectedCategoryId,
+        Active: active,
       });
       await loadCategories();
       closeModal();
@@ -674,11 +700,11 @@ const App: React.FC = () => {
     }
   };
 
-  const handleEditTheme = async (title: string) => {
+  const handleEditTheme = async ({ title, active }: { title: string; active: boolean }) => {
     if (modalState?.type === 'editTheme') {
       if (!requireAdmin()) return;
       try {
-        await themeService.updateTheme(modalState.theme.id, { name: title });
+        await themeService.updateTheme(modalState.theme.id, { name: title, Active: active });
         await loadCategories();
         closeModal();
       } catch (error) {
@@ -923,6 +949,8 @@ const App: React.FC = () => {
             onDeleteConfession={openDeleteConfessionModal}
             onToggleConfessionLike={handleToggleConfessionLike}
             canModify={canModifyConfessionForUI}
+            isAuthenticated={isAuthenticated}
+            onRequestLogin={promptLoginForFullExperience}
           />
         );
       case 'confessionDetail':
@@ -937,6 +965,8 @@ const App: React.FC = () => {
             onToggleConfessionLike={handleToggleConfessionLike}
             onToggleCommentLike={handleToggleCommentLike}
             canModify={canManageComment}
+            isAuthenticated={isAuthenticated}
+            onRequestLogin={promptLoginForFullExperience}
           />
         );
       case 'login':

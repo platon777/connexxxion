@@ -33,6 +33,7 @@ export const createTheme = async (data: {
   name: string;
   category?: number;
   description?: string;
+  Active?: boolean;
 }): Promise<Theme> => {
   return apiClient.post<Theme>('theme', '/theme', data);
 };

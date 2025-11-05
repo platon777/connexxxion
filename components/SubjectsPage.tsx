@@ -26,11 +26,19 @@ const SubjectCard: React.FC<{
     : typeof subject.number_of_confess === 'number'
     ? subject.number_of_confess
     : 0;
+  const isActive = subject.Active === undefined ? true : Boolean(subject.Active);
+  const statusLabel = isActive ? 'Ouvert' : 'Ferme';
+  const statusClasses = isActive
+    ? 'bg-emerald-100 text-emerald-700'
+    : 'bg-gray-200 text-gray-600';
 
   return (
     <div className="group relative bg-white p-6 rounded-2xl border border-gray-200 hover:border-yellow-400 hover:shadow-lg hover:shadow-yellow-400/10 transition-all duration-300 transform hover:-translate-y-1">
       <div onClick={onClick} className="cursor-pointer">
-        <h3 className="text-lg font-semibold text-gray-800 group-hover:text-yellow-600 pr-8">{subject.name}</h3>
+        <div className="flex items-start justify-between gap-3 pr-8">
+          <h3 className="text-lg font-semibold text-gray-800 group-hover:text-yellow-600">{subject.name}</h3>
+          <span className={`px-3 py-1 text-xs font-semibold rounded-full ${statusClasses}`}>{statusLabel}</span>
+        </div>
         <div className="flex items-center text-sm text-gray-500 mt-3 space-x-2">
           <span className="text-xl">{CONFESSION_ICON}</span>
           <span>

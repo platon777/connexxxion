@@ -37,9 +37,9 @@ const Header: React.FC<HeaderProps> = ({ onHomeClick, onCategoriesClick, onMemos
           </nav>
           <div className="flex items-center">
             {userId ? (
-              <div className="flex items-center space-x-4">
-                <span className="text-sm font-medium text-gray-600 hidden sm:inline">
-                  Connecte : <span className="font-bold">{userId}</span>
+              <div className="flex flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-4">
+                <span className="text-xs sm:text-sm font-medium text-gray-600">
+                  Connecte : <span className="font-bold text-gray-700">{userId}</span>
                 </span>
                 <button
                   onClick={onLogout}

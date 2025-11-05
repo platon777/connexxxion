@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import type { Confession, Comment } from '../types';
 import ItemMenu from './ItemMenu';
 
@@ -37,6 +37,8 @@ interface ConfessionDetailPageProps {
   onToggleConfessionLike: (confession: Confession) => void;
   onToggleCommentLike: (comment: Comment) => void;
   canModify: (item: any) => boolean;
+  isAuthenticated: boolean;
+  onRequestLogin: () => void;
 }
 
 const CommentCard: React.FC<{
@@ -100,8 +102,11 @@ const ConfessionDetailPage: React.FC<ConfessionDetailPageProps> = ({
   onToggleConfessionLike,
   onToggleCommentLike,
   canModify,
+  isAuthenticated,
+  onRequestLogin,
 }) => {
   const [visibleCommentsCount, setVisibleCommentsCount] = useState(COMMENTS_PER_PAGE);
+  const [loadMoreClicks, setLoadMoreClicks] = useState(0);
 
   const comments = Array.isArray(confession._comment_of_confession) ? confession._comment_of_confession : [];
   const sortedComments = useMemo(() => {
@@ -123,8 +128,19 @@ const ConfessionDetailPage: React.FC<ConfessionDetailPageProps> = ({
   const isConfessionLiked = Boolean(confession._is_liked);
 
   const handleLoadMore = () => {
+    if (!isAuthenticated) {
+      if (loadMoreClicks >= 2) {
+        onRequestLogin();
+        return;
+      }
+      setLoadMoreClicks((prev) => prev + 1);
+    }
     setVisibleCommentsCount((prev) => prev + COMMENTS_PER_PAGE);
   };
+  useEffect(() => {
+    setVisibleCommentsCount(COMMENTS_PER_PAGE);
+    setLoadMoreClicks(0);
+  }, [confession.id]);
 
   return (
     <div className="max-w-3xl mx-auto">
