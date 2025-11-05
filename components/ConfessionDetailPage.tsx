@@ -39,6 +39,7 @@ interface ConfessionDetailPageProps {
   canModify: (item: any) => boolean;
   isAuthenticated: boolean;
   onRequestLogin: () => void;
+  onShareConfession: (confession: Confession) => void;
 }
 
 const CommentCard: React.FC<{
@@ -104,6 +105,7 @@ const ConfessionDetailPage: React.FC<ConfessionDetailPageProps> = ({
   canModify,
   isAuthenticated,
   onRequestLogin,
+  onShareConfession,
 }) => {
   const [visibleCommentsCount, setVisibleCommentsCount] = useState(COMMENTS_PER_PAGE);
   const [loadMoreClicks, setLoadMoreClicks] = useState(0);
@@ -169,6 +171,22 @@ const ConfessionDetailPage: React.FC<ConfessionDetailPageProps> = ({
         </div>
         <p className="text-gray-700 text-lg leading-relaxed whitespace-pre-wrap">{confession.content}</p>
         <div className="flex items-center justify-end space-x-6 mt-8 pt-6 border-t border-gray-100">
+          <button
+            type="button"
+            onClick={() => onShareConfession(confession)}
+            className="flex items-center space-x-2 text-gray-500 transition-transform duration-200 hover:scale-105"
+            aria-label="Copier le lien de la confession"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 14L21 3m0 0h-5m5 0v5M13 7a7 7 0 11-7 7"
+              />
+            </svg>
+            <span className="text-sm font-medium">Copier le lien</span>
+          </button>
           <button
             type="button"
             onClick={() => onToggleConfessionLike(confession)}

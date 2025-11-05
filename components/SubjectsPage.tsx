@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import type { Category, Subject } from '../types';
 import ItemMenu from './ItemMenu';
 
@@ -12,6 +12,7 @@ interface SubjectsPageProps {
   onEditSubject: (subject: Subject) => void;
   onDeleteSubject: (subject: Subject) => void;
   canModify: (item: any) => boolean;
+  onReorderSubjects?: (orderedIds: number[]) => void;
 }
 
 const SubjectCard: React.FC<{
@@ -28,9 +29,7 @@ const SubjectCard: React.FC<{
     : 0;
   const isActive = subject.Active === undefined ? true : Boolean(subject.Active);
   const statusLabel = isActive ? 'Ouvert' : 'Ferme';
-  const statusClasses = isActive
-    ? 'bg-emerald-100 text-emerald-700'
-    : 'bg-gray-200 text-gray-600';
+  const statusClasses = isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200 text-gray-600';
 
   return (
     <div className="group relative bg-white p-6 rounded-2xl border border-gray-200 hover:border-yellow-400 hover:shadow-lg hover:shadow-yellow-400/10 transition-all duration-300 transform hover:-translate-y-1">
@@ -51,6 +50,23 @@ const SubjectCard: React.FC<{
   );
 };
 
+const moveSubject = (items: Subject[], sourceId: number, targetId: number): Subject[] => {
+  const sourceIndex = items.findIndex((item) => item.id === sourceId);
+  const targetIndex = items.findIndex((item) => item.id === targetId);
+  if (sourceIndex === -1 || targetIndex === -1) {
+    return items;
+  }
+  const updated = [...items];
+  const [moved] = updated.splice(sourceIndex, 1);
+  updated.splice(targetIndex, 0, moved);
+  return updated;
+};
+
+const hasSameOrder = (current: Subject[], next: Subject[]): boolean => {
+  if (current.length !== next.length) return false;
+  return current.every((item, index) => item.id === next[index]?.id);
+};
+
 const SubjectsPage: React.FC<SubjectsPageProps> = ({
   category,
   onSelectSubject,
@@ -59,7 +75,54 @@ const SubjectsPage: React.FC<SubjectsPageProps> = ({
   onEditSubject,
   onDeleteSubject,
   canModify,
+  onReorderSubjects,
 }) => {
+  const initialSubjects = Array.isArray(category._theme_of_category_2) ? category._theme_of_category_2 : [];
+  const [orderedSubjects, setOrderedSubjects] = useState<Subject[]>(initialSubjects);
+  const [draggedSubjectId, setDraggedSubjectId] = useState<number | null>(null);
+  const canAdmin = canModify({});
+  const allowReorder = Boolean(onReorderSubjects) && canAdmin;
+
+  useEffect(() => {
+    setOrderedSubjects(initialSubjects);
+  }, [initialSubjects]);
+
+  const handleDragStart = (event: React.DragEvent<HTMLDivElement>, subjectId: number) => {
+    if (!allowReorder) return;
+    setDraggedSubjectId(subjectId);
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', String(subjectId));
+  };
+
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    if (!allowReorder) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>, targetId: number) => {
+    if (!allowReorder || draggedSubjectId === null) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (draggedSubjectId === targetId) {
+      setDraggedSubjectId(null);
+      return;
+    }
+
+    const updated = moveSubject(orderedSubjects, draggedSubjectId, targetId);
+    setDraggedSubjectId(null);
+    if (hasSameOrder(orderedSubjects, updated)) {
+      return;
+    }
+
+    setOrderedSubjects(updated);
+    onReorderSubjects?.(updated.map((subject) => subject.id));
+  };
+
+  const handleDragEnd = () => {
+    setDraggedSubjectId(null);
+  };
+
   return (
     <div>
       <div className="bg-gradient-to-r from-yellow-400 to-amber-400 text-white rounded-2xl p-8 mb-12 relative overflow-hidden">
@@ -69,14 +132,14 @@ const SubjectsPage: React.FC<SubjectsPageProps> = ({
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-          <span>Retour aux categories</span>
+          <span>Retour aux cat\u00E9gories</span>
         </button>
         <h1 className="text-4xl font-extrabold">{category.name}</h1>
       </div>
 
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Sujets</h2>
-        {canModify({}) && (
+        {canAdmin && (
           <button
             onClick={onAddSubject}
             className="hidden md:flex items-center space-x-2 px-4 py-2 bg-yellow-100 text-yellow-800 font-semibold text-sm rounded-full shadow-sm hover:bg-yellow-200 transition-all duration-300 transform hover:scale-105"
@@ -90,19 +153,40 @@ const SubjectsPage: React.FC<SubjectsPageProps> = ({
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {(category._theme_of_category_2 || []).map((subject) => (
-          <SubjectCard
-            key={subject.id}
-            subject={subject}
-            onClick={() => onSelectSubject(subject.id)}
-            onEdit={() => onEditSubject(subject)}
-            onDelete={() => onDeleteSubject(subject)}
-            canModify={canModify(subject)}
-          />
-        ))}
-        {(!category._theme_of_category_2 || category._theme_of_category_2.length === 0) && (
+        {orderedSubjects.map((subject) => {
+          const isDragging = draggedSubjectId === subject.id;
+          const draggableProps = allowReorder
+            ? {
+                draggable: true,
+                onDragStart: (event: React.DragEvent<HTMLDivElement>) => handleDragStart(event, subject.id),
+                onDragOver: handleDragOver,
+                onDrop: (event: React.DragEvent<HTMLDivElement>) => handleDrop(event, subject.id),
+                onDragEnd: handleDragEnd,
+              }
+            : {};
+
+          return (
+            <div
+              key={subject.id}
+              {...draggableProps}
+              className={`relative ${allowReorder ? 'cursor-grab active:cursor-grabbing' : ''} ${isDragging ? 'opacity-70' : ''}`}
+            >
+              {allowReorder && (
+                <div className="pointer-events-none select-none absolute left-4 top-4 text-gray-300 text-lg">::</div>
+              )}
+              <SubjectCard
+                subject={subject}
+                onClick={() => onSelectSubject(subject.id)}
+                onEdit={() => onEditSubject(subject)}
+                onDelete={() => onDeleteSubject(subject)}
+                canModify={canModify(subject)}
+              />
+            </div>
+          );
+        })}
+        {orderedSubjects.length === 0 && (
           <div className="md:col-span-2 lg:col-span-3 text-center py-10 bg-gray-50 rounded-lg">
-            <p className="text-gray-500">Aucun sujet dans cette categorie pour le moment.</p>
+            <p className="text-gray-500">Aucun sujet dans cette cat\u00E9gorie pour le moment.</p>
           </div>
         )}
       </div>

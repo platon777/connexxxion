@@ -5,11 +5,26 @@
 import { apiClient } from './client';
 import type { Theme } from '../types';
 
+const sortByOrder = (themes: Theme[]): Theme[] => {
+  return [...themes].sort((a, b) => {
+    const orderA = typeof a.order === 'number' ? a.order : Number.MAX_SAFE_INTEGER;
+    const orderB = typeof b.order === 'number' ? b.order : Number.MAX_SAFE_INTEGER;
+    if (orderA !== orderB) {
+      return orderA - orderB;
+    }
+
+    const nameA = (a.name ?? '') as string;
+    const nameB = (b.name ?? '') as string;
+    return nameA.localeCompare(nameB, 'fr', { sensitivity: 'base' });
+  });
+};
+
 /**
  * Get all themes
  */
 export const getThemes = async (): Promise<Theme[]> => {
-  return apiClient.get<Theme[]>('theme', '/theme');
+  const themes = await apiClient.get<Theme[]>('theme', '/theme');
+  return sortByOrder(themes);
 };
 
 /**
@@ -23,7 +38,8 @@ export const getTheme = async (id: number): Promise<Theme> => {
  * Get themes by category
  */
 export const getThemesByCategory = async (categoryId: number): Promise<Theme[]> => {
-  return apiClient.get<Theme[]>('theme', '/theme_by_category', { category_id: categoryId });
+  const themes = await apiClient.get<Theme[]>('theme', '/theme_by_category', { category_id: categoryId });
+  return sortByOrder(themes);
 };
 
 /**
@@ -34,6 +50,7 @@ export const createTheme = async (data: {
   category?: number;
   description?: string;
   Active?: boolean;
+  order?: number;
 }): Promise<Theme> => {
   return apiClient.post<Theme>('theme', '/theme', data);
 };
@@ -43,7 +60,7 @@ export const createTheme = async (data: {
  */
 export const updateTheme = async (
   id: number,
-  data: { name?: string; description?: string; Active?: boolean }
+  data: { name?: string; description?: string; Active?: boolean; order?: number }
 ): Promise<Theme> => {
   return apiClient.patch<Theme>('theme', `/theme/${id}`, data);
 };

@@ -53,6 +53,7 @@ export interface Theme {
   description?: string;
   number_of_confess: number;
   Active?: boolean;
+  order?: number;
   // Addon fields
   _category?: Category;
   _confession?: Confession[];
@@ -64,6 +65,7 @@ export interface Category {
   name: string;
   user?: number;
   theme_count?: number;
+  order?: number;
   // Addon fields
   _theme_of_category_2?: Theme[];
 }

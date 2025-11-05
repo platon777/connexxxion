@@ -29,6 +29,107 @@ import AddConfessionForm from './components/AddConfessionForm';
 import AddCommentForm from './components/AddCommentForm';
 import ConfirmDeleteModal from './components/ConfirmDeleteModal';
 
+type NavigationState = {
+  view: View;
+  categoryId: number | null;
+  themeId: number | null;
+  confessionId: number | null;
+};
+
+const parseNumberParam = (value: string | null): number | null => {
+  if (!value) return null;
+  const parsed = parseInt(value, 10);
+  return Number.isNaN(parsed) ? null : parsed;
+};
+
+const buildUrlFromState = (state: NavigationState): string => {
+  if (typeof window === 'undefined') {
+    return '';
+  }
+  const url = new URL(window.location.href);
+  const params = new URLSearchParams();
+
+  switch (state.view) {
+    case 'home':
+      break;
+    case 'categories':
+      params.set('view', 'categories');
+      break;
+    case 'subjects':
+      params.set('view', 'subjects');
+      if (state.categoryId) {
+        params.set('categoryId', String(state.categoryId));
+      }
+      break;
+    case 'confessions':
+      params.set('view', 'confessions');
+      if (state.categoryId) {
+        params.set('categoryId', String(state.categoryId));
+      }
+      if (state.themeId) {
+        params.set('themeId', String(state.themeId));
+      }
+      break;
+    case 'confessionDetail':
+      params.set('view', 'confessionDetail');
+      if (state.categoryId) {
+        params.set('categoryId', String(state.categoryId));
+      }
+      if (state.themeId) {
+        params.set('themeId', String(state.themeId));
+      }
+      if (state.confessionId) {
+        params.set('confessionId', String(state.confessionId));
+      }
+      break;
+    default:
+      params.set('view', state.view);
+      break;
+  }
+
+  const search = params.toString();
+  return `${url.pathname}${search ? `?${search}` : ''}`;
+};
+
+const findConfessionLocationInCategories = (
+  categories: Category[],
+  confessionId: number
+): { categoryId: number; themeId: number } | null => {
+  for (const category of categories) {
+    if (!Array.isArray(category._theme_of_category_2)) continue;
+    for (const theme of category._theme_of_category_2) {
+      if (!Array.isArray(theme._confession)) continue;
+      if (theme._confession.some((confession) => confession.id === confessionId)) {
+        return { categoryId: category.id, themeId: theme.id };
+      }
+    }
+  }
+  return null;
+};
+
+const reorderByIdList = <T extends { id: number }>(items: T[], orderedIds: number[]): T[] => {
+  const idToItem = new Map(items.map((item) => [item.id, item]));
+  const ordered: T[] = [];
+  orderedIds.forEach((id) => {
+    const item = idToItem.get(id);
+    if (item) {
+      ordered.push(item);
+      idToItem.delete(id);
+    }
+  });
+  if (idToItem.size === 0) {
+    return ordered;
+  }
+  return [...ordered, ...Array.from(idToItem.values())];
+};
+
+const hasSameOrder = (items: { id: number }[], orderedIds: number[]): boolean => {
+  if (items.length !== orderedIds.length) {
+    return false;
+  }
+  return items.every((item, index) => item.id === orderedIds[index]);
+};
+
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -82,7 +183,7 @@ const App: React.FC = () => {
       themeId: selectedThemeId,
       confessionId: selectedConfessionId,
     };
-    window.history.replaceState(initialState, '', window.location.pathname);
+    window.history.replaceState(initialState, '', window.location.href);
 
     // Listen for browser back/forward button
     const handlePopState = (event: PopStateEvent) => {
@@ -126,7 +227,8 @@ const App: React.FC = () => {
       currentState.themeId !== state.themeId ||
       currentState.confessionId !== state.confessionId
     ) {
-      window.history.pushState(state, '', window.location.pathname);
+      const url = buildUrlFromState(state);
+      window.history.pushState(state, '', url);
     }
   }, [view, selectedCategoryId, selectedThemeId, selectedConfessionId]);
 
@@ -298,6 +400,53 @@ const App: React.FC = () => {
       const updated = current.map((comment) => (comment.id === commentId ? updater(comment) : comment));
       return { ...prev, [confessionId]: updated };
     });
+  };
+
+  const resolveConfessionLocation = async (
+    confessionId: number,
+    hints: { categoryId?: number | null; themeId?: number | null } = {}
+  ): Promise<{ categoryId: number; themeId: number } | null> => {
+    if (hints.categoryId && hints.themeId) {
+      return {
+        categoryId: hints.categoryId,
+        themeId: hints.themeId,
+      };
+    }
+
+    const fromState = findConfessionLocationInCategories(categories, confessionId);
+    if (fromState) {
+      return fromState;
+    }
+
+    try {
+      const response = (await confessionService.getConfession(confessionId)) as any;
+      const detail: Confession = response?.result1 ?? response;
+      const themeId =
+        detail?.theme ??
+        (detail as any)?.theme_id ??
+        detail?._theme?.id ??
+        (detail as any)?._theme?.theme_id ??
+        hints.themeId ??
+        null;
+      const categoryId =
+        detail?._theme?.category ??
+        detail?._theme?.category_id ??
+        (detail as any)?.category ??
+        (detail as any)?.category_id ??
+        hints.categoryId ??
+        null;
+
+      if (themeId && categoryId) {
+        if (!findConfessionLocationInCategories(categories, confessionId)) {
+          await loadCategories({ silent: true });
+        }
+        return { categoryId, themeId };
+      }
+    } catch (error) {
+      console.error(`Failed to resolve location for confession ${confessionId}:`, error);
+    }
+
+    return null;
   };
 
   // --- Data Access Helpers ---
@@ -547,6 +696,18 @@ const App: React.FC = () => {
     }
   };
 
+  const handleNavigateToConfessionFromUrl = async (
+    confessionId: number,
+    hints: { categoryId?: number | null; themeId?: number | null } = {}
+  ) => {
+    const location = await resolveConfessionLocation(confessionId, hints);
+    if (!location) {
+      alert('Confession introuvable ou plus disponible.');
+      return;
+    }
+    navigate('confessionDetail', location.categoryId, location.themeId, confessionId);
+  };
+
   const handleBack = () => {
     if (view === 'confessionDetail') {
       navigate('confessions', selectedCategoryId, selectedThemeId);
@@ -556,6 +717,33 @@ const App: React.FC = () => {
       navigate('categories');
     }
   };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const confessionParam = parseNumberParam(params.get('confessionId'));
+    const categoryParam = parseNumberParam(params.get('categoryId'));
+    const themeParam = parseNumberParam(params.get('themeId'));
+    const viewParam = params.get('view') as View | null;
+
+    if (confessionParam) {
+      void handleNavigateToConfessionFromUrl(confessionParam, {
+        categoryId: categoryParam,
+        themeId: themeParam,
+      });
+      return;
+    }
+
+    if (viewParam === 'subjects' && categoryParam) {
+      navigate('subjects', categoryParam);
+    } else if (viewParam === 'confessions' && categoryParam && themeParam) {
+      navigate('confessions', categoryParam, themeParam);
+    } else if (viewParam === 'confessionDetail' && categoryParam && themeParam) {
+      navigate('confessions', categoryParam, themeParam);
+    } else if (viewParam === 'categories') {
+      navigate('categories');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const openDonations = () => {
     setPreviousView(view);
@@ -682,6 +870,23 @@ const App: React.FC = () => {
     }
   };
 
+  const handleReorderCategories = async (orderedIds: number[]) => {
+    if (!requireAdmin()) return;
+    if (hasSameOrder(categories, orderedIds)) {
+      return;
+    }
+    setCategories((prev) => reorderByIdList(prev, orderedIds));
+    try {
+      await Promise.all(
+        orderedIds.map((id, index) => categoryService.updateCategory(id, { order: index + 1 }))
+      );
+    } catch (error) {
+      console.error('Failed to reorder categories:', error);
+      alert("Erreur lors de la mise a jour de l'ordre des categories");
+      await loadCategories();
+    }
+  };
+
   // Theme (Subject)
   const handleAddTheme = async ({ title, active }: { title: string; active: boolean }) => {
     if (!selectedCategoryId) return;
@@ -723,6 +928,35 @@ const App: React.FC = () => {
     } catch (error) {
       console.error('Failed to delete theme:', error);
       alert('Erreur lors de la suppression du sujet');
+    }
+  };
+
+  const handleReorderThemes = async (categoryId: number, orderedIds: number[]) => {
+    if (!requireAdmin()) return;
+    const targetCategory = categories.find((category) => category.id === categoryId);
+    if (!targetCategory || !Array.isArray(targetCategory._theme_of_category_2)) {
+      return;
+    }
+    if (hasSameOrder(targetCategory._theme_of_category_2, orderedIds)) {
+      return;
+    }
+    setCategories((prev) =>
+      prev.map((category) => {
+        if (category.id !== categoryId || !Array.isArray(category._theme_of_category_2)) {
+          return category;
+        }
+        const reorderedThemes = reorderByIdList(category._theme_of_category_2, orderedIds);
+        return { ...category, _theme_of_category_2: reorderedThemes };
+      })
+    );
+    try {
+      await Promise.all(
+        orderedIds.map((id, index) => themeService.updateTheme(id, { order: index + 1 }))
+      );
+    } catch (error) {
+      console.error('Failed to reorder themes:', error);
+      alert("Erreur lors de la mise a jour de l'ordre des sujets");
+      await loadCategories();
     }
   };
 
@@ -856,6 +1090,65 @@ const App: React.FC = () => {
     }
   };
 
+  const handleShareConfession = async (confession: Confession) => {
+    let location =
+      findConfessionLocationInCategories(categories, confession.id) ??
+      (confession._theme
+        ? {
+            categoryId:
+              confession._theme.category ??
+              (confession._theme as any)?.category_id ??
+              selectedCategoryId ??
+              null,
+            themeId: confession._theme.id ?? confession.theme ?? null,
+          }
+        : null);
+
+    if (!location || !location.categoryId || !location.themeId) {
+      const resolved = await resolveConfessionLocation(confession.id, {
+        categoryId: location?.categoryId ?? selectedCategoryId,
+        themeId: location?.themeId ?? selectedThemeId ?? confession.theme ?? null,
+      });
+      if (resolved) {
+        location = resolved;
+      }
+    }
+
+    if (!location || !location.categoryId || !location.themeId) {
+      alert("Impossible de generer le lien de partage pour le moment.");
+      return;
+    }
+
+    const shareState: NavigationState = {
+      view: 'confessionDetail',
+      categoryId: location.categoryId,
+      themeId: location.themeId,
+      confessionId: confession.id,
+    };
+    const sharePath = buildUrlFromState(shareState);
+    const shareUrl = new URL(sharePath, window.location.origin).toString();
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: 'Confession Connexxxion',
+          url: shareUrl,
+        });
+        return;
+      }
+    } catch (error) {
+      console.warn('Partage systeme indisponible, utilisation du presse-papiers.', error);
+    }
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      alert('Lien copie dans le presse-papiers !');
+    } catch (error) {
+      console.error('Failed to copy confession link:', error);
+      window.prompt('Copiez ce lien :', shareUrl);
+    }
+  };
+
   const handleToggleCommentLike = async (comment: Comment) => {
     try {
       const confessionId = comment.confession ?? selectedConfessionId;
@@ -922,6 +1215,7 @@ const App: React.FC = () => {
             onEditCategory={openEditCategoryModal}
             onDeleteCategory={openDeleteCategoryModal}
             canModify={() => canManageCategory()}
+            onReorderCategories={handleReorderCategories}
           />
         );
       case 'subjects':
@@ -935,6 +1229,7 @@ const App: React.FC = () => {
             onEditSubject={openEditThemeModal}
             onDeleteSubject={openDeleteThemeModal}
             canModify={() => canManageTheme()}
+            onReorderSubjects={(orderedIds) => handleReorderThemes(selectedCategory.id, orderedIds)}
           />
         );
       case 'confessions':
@@ -967,6 +1262,7 @@ const App: React.FC = () => {
             canModify={canManageComment}
             isAuthenticated={isAuthenticated}
             onRequestLogin={promptLoginForFullExperience}
+            onShareConfession={handleShareConfession}
           />
         );
       case 'login':
