@@ -875,10 +875,30 @@ const App: React.FC = () => {
     if (hasSameOrder(categories, orderedIds)) {
       return;
     }
-    setCategories((prev) => reorderByIdList(prev, orderedIds));
+
+    const reorderedWithOrder = reorderByIdList(categories, orderedIds).map((category, index) => ({
+      ...category,
+      order: index + 1,
+    }));
+
+    const updates = reorderedWithOrder.reduce((acc, category) => {
+      const previous = categories.find((item) => item.id === category.id);
+      if (previous?.order === category.order) {
+        return acc;
+      }
+      acc.push({ id: category.id, order: category.order as number });
+      return acc;
+    }, [] as { id: number; order: number }[]);
+
+    setCategories(reorderedWithOrder);
+
+    if (updates.length === 0) {
+      return;
+    }
+
     try {
       await Promise.all(
-        orderedIds.map((id, index) => categoryService.updateCategory(id, { order: index + 1 }))
+        updates.map(({ id, order }) => categoryService.updateCategory(id, { order }))
       );
     } catch (error) {
       console.error('Failed to reorder categories:', error);
@@ -945,13 +965,33 @@ const App: React.FC = () => {
         if (category.id !== categoryId || !Array.isArray(category._theme_of_category_2)) {
           return category;
         }
-        const reorderedThemes = reorderByIdList(category._theme_of_category_2, orderedIds);
+        const reorderedThemes = reorderByIdList(category._theme_of_category_2, orderedIds).map(
+          (theme, index) => ({
+            ...theme,
+            order: index + 1,
+          })
+        );
         return { ...category, _theme_of_category_2: reorderedThemes };
       })
     );
+
+    const updates = orderedIds.reduce((acc, id, index) => {
+      const previous = targetCategory._theme_of_category_2?.find((theme) => theme.id === id);
+      const newOrder = index + 1;
+      if (previous?.order === newOrder) {
+        return acc;
+      }
+      acc.push({ id, order: newOrder });
+      return acc;
+    }, [] as { id: number; order: number }[]);
+
+    if (updates.length === 0) {
+      return;
+    }
+
     try {
       await Promise.all(
-        orderedIds.map((id, index) => themeService.updateTheme(id, { order: index + 1 }))
+        updates.map(({ id, order }) => themeService.updateTheme(id, { order }))
       );
     } catch (error) {
       console.error('Failed to reorder themes:', error);

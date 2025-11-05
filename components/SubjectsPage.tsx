@@ -84,7 +84,7 @@ const SubjectsPage: React.FC<SubjectsPageProps> = ({
   const allowReorder = Boolean(onReorderSubjects) && canAdmin;
 
   useEffect(() => {
-    setOrderedSubjects(initialSubjects);
+    setOrderedSubjects(initialSubjects.map((subject) => ({ ...subject })));
   }, [initialSubjects]);
 
   const handleDragStart = (event: React.DragEvent<HTMLDivElement>, subjectId: number) => {
@@ -115,8 +115,12 @@ const SubjectsPage: React.FC<SubjectsPageProps> = ({
       return;
     }
 
-    setOrderedSubjects(updated);
-    onReorderSubjects?.(updated.map((subject) => subject.id));
+    const updatedWithOrder = updated.map((subject, index) => ({
+      ...subject,
+      order: index + 1,
+    }));
+    setOrderedSubjects(updatedWithOrder);
+    onReorderSubjects?.(updatedWithOrder.map((subject) => subject.id));
   };
 
   const handleDragEnd = () => {

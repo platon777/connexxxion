@@ -79,7 +79,7 @@ const CategoriesPage: React.FC<CategoriesPageProps> = ({
   const allowReorder = Boolean(onReorderCategories) && canAdmin;
 
   useEffect(() => {
-    setOrderedCategories(categories);
+    setOrderedCategories(categories.map((category) => ({ ...category })));
   }, [categories]);
 
   const handleDragStart = (event: React.DragEvent<HTMLDivElement>, categoryId: number) => {
@@ -110,8 +110,12 @@ const CategoriesPage: React.FC<CategoriesPageProps> = ({
       return;
     }
 
-    setOrderedCategories(updated);
-    onReorderCategories?.(updated.map((category) => category.id));
+    const updatedWithOrder = updated.map((category, index) => ({
+      ...category,
+      order: index + 1,
+    }));
+    setOrderedCategories(updatedWithOrder);
+    onReorderCategories?.(updatedWithOrder.map((category) => category.id));
   };
 
   const handleDragEnd = () => {
