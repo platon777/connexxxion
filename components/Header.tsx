@@ -44,7 +44,8 @@ const Header: React.FC<HeaderProps> = ({ onHomeClick, onCategoriesClick, onMemos
                 >
                   Deconnexion
                 </button>
-                <span className="order-2 sm:order-1 mt-1 sm:mt-0 text-xs sm:text-sm font-medium text-gray-600">
+                <span className="order-2 sm:order-1 mt-1 sm:mt-0 text-xs sm:text-sm font-medium text-gray-600 flex items-center gap-2">
+                  <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
                   Connecte : <span className="font-bold text-gray-700">{userId}</span>
                 </span>
               </div>
