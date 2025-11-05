@@ -4,7 +4,7 @@ interface HomePageProps {
   onStart: () => void;
 }
 
-const CONFESSION_ICON = String.fromCodePoint(0x1f48b);
+const CONFESSION_ICON = String.fromCodePoint(0x1f92b);
 
 const HomePage: React.FC<HomePageProps> = ({ onStart }) => {
   return (
