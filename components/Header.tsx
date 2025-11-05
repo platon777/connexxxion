@@ -38,15 +38,15 @@ const Header: React.FC<HeaderProps> = ({ onHomeClick, onCategoriesClick, onMemos
           <div className="flex items-center">
             {userId ? (
               <div className="flex flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-4">
-                <span className="text-xs sm:text-sm font-medium text-gray-600">
-                  Connecte : <span className="font-bold text-gray-700">{userId}</span>
-                </span>
                 <button
                   onClick={onLogout}
-                  className="px-4 py-2 bg-yellow-100 text-yellow-800 text-sm font-semibold rounded-full hover:bg-yellow-200 transition-colors"
+                  className="order-1 sm:order-2 px-4 py-2 bg-yellow-100 text-yellow-800 text-sm font-semibold rounded-full hover:bg-yellow-200 transition-colors"
                 >
                   Deconnexion
                 </button>
+                <span className="order-2 sm:order-1 mt-1 sm:mt-0 text-xs sm:text-sm font-medium text-gray-600">
+                  Connecte : <span className="font-bold text-gray-700">{userId}</span>
+                </span>
               </div>
             ) : (
               <button

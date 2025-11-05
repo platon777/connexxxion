@@ -37,7 +37,7 @@ const MobileNav: React.FC<MobileNavProps> = ({
   showAddButton,
   showMemosButton,
 }) => {
-  // Calculer le nombre total d'éléments pour la grille
+  // Calculer le nombre total d'elements pour la grille
   const baseItems = 2; // Accueil + Categories
   const withMemos = showMemosButton ? 1 : 0;
   const withAddButton = showAddButton ? 1 : 0;
@@ -71,20 +71,6 @@ const MobileNav: React.FC<MobileNavProps> = ({
           onClick={onHomeClick}
         />
 
-        {showAddButton && (
-          <div className="flex justify-center">
-            <button
-              onClick={onAddClick}
-              className="w-14 h-14 bg-yellow-400 rounded-full flex items-center justify-center text-gray-900 shadow-lg shadow-yellow-400/40 transform hover:scale-110 transition-transform duration-300 -mt-6"
-              aria-label="Ajouter"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-              </svg>
-            </button>
-          </div>
-        )}
-
         <NavItem
           label="Categories"
           icon={
@@ -111,6 +97,20 @@ const MobileNav: React.FC<MobileNavProps> = ({
           }
           onClick={onCategoriesClick}
         />
+
+        {showAddButton && (
+          <div className="flex justify-center">
+            <button
+              onClick={onAddClick}
+              className="w-14 h-14 bg-yellow-400 rounded-full flex items-center justify-center text-gray-900 shadow-lg shadow-yellow-400/40 transform hover:scale-110 transition-transform duration-300 -mt-6"
+              aria-label="Ajouter"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        )}
 
         {showMemosButton && onMemosClick && (
           <NavItem
