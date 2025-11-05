@@ -17,7 +17,7 @@ const Header: React.FC<HeaderProps> = ({ onHomeClick, onCategoriesClick, onMemos
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           <button type="button" className="flex-shrink-0 cursor-pointer" onClick={onHomeClick}>
-            <img src={logoImg} alt="ConneXXion Logo" className="h-12" />
+            <img src={logoImg} alt="ConneXXion Logo" className="h-8 sm:h-12" />
           </button>
           <nav className="hidden md:flex md:items-center md:space-x-8">
             <button onClick={onHomeClick} className="font-semibold text-gray-500 hover:text-gray-900 transition-colors">
@@ -46,7 +46,7 @@ const Header: React.FC<HeaderProps> = ({ onHomeClick, onCategoriesClick, onMemos
                 </button>
                 <span className="order-2 sm:order-1 mt-1 sm:mt-0 text-xs sm:text-sm font-medium text-gray-600 flex items-center gap-2">
                   <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
-                  Connecte : <span className="font-bold text-gray-700">{userId}</span>
+                  Connecté : <span className="font-bold text-gray-700">{userId}</span>
                 </span>
               </div>
             ) : (

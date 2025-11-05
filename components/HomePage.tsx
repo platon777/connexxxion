@@ -25,7 +25,7 @@ const HomePage: React.FC<HomePageProps> = ({ onStart }) => {
         <h1 className="text-4xl md:text-6xl font-extrabold text-gray-800 leading-tight">
           Plongez dans l'univers
           <br />
-          mysterieux des{' '}
+          mystérieux des{' '}
           <span className="relative inline-block">
             <span className="absolute inset-x-0 bottom-1.5 md:bottom-2.5 h-3 md:h-5 bg-yellow-300 z-[-1]"></span>
             <span className="relative">confessions</span>
@@ -33,7 +33,7 @@ const HomePage: React.FC<HomePageProps> = ({ onStart }) => {
         </h1>
 
         <p className="mt-6 text-lg text-gray-500 max-w-2xl mx-auto italic">
-          "La ou l'anonymat rencontre l'authenticite naissent les plus belles verites."
+          "Là où l'anonymat rencontre l'authenticité naissent les plus belles vérités."
         </p>
 
         <div className="mt-12">
@@ -53,3 +53,13 @@ const HomePage: React.FC<HomePageProps> = ({ onStart }) => {
 };
 
 export default HomePage;
+
+
+
+
+
+
+
+
+
+
