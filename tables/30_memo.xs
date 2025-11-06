@@ -12,9 +12,6 @@ table memo {
     // Detailed description of the donation memo.
     text description? filters=trim
   
-    // Optional image related to the memo.
-    image image?
-  
     // Reference to the user who created this memo.
     int user? {
       table = "user"

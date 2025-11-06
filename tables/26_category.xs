@@ -10,6 +10,7 @@ table category {
     text name? filters=trim
   
     int theme_count?
+    int order?
   }
 
   index = [

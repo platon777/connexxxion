@@ -19,6 +19,7 @@ table theme {
   
     int number_of_confess?
     bool Active?
+    int order?
   }
 
   index = [
